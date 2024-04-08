@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "lazy-split-sqr"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.110.1"
+uvicorn = "^0.29.0"
+databases = "^0.9.0"
+sqlalchemy = "^2.0.29"
+python-multipart = "^0.0.9"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
