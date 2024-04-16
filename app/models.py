@@ -21,9 +21,14 @@ class Group(Base):
     group_id = Column(Integer, primary_key=True, index=True)
     group_name = Column(String, index=True)
     created_by = Column(Integer, ForeignKey("users.user_id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+
+    total_expenses = Column(Integer, default=0)
+    total_members = Column(Integer, default=1)
 
     groupmembers = relationship("GroupMembership", back_populates="group")
+    groupexpenses = relationship("Expense", back_populates="group")
+
 
 class GroupMembership(Base):
     __tablename__ = "group_memberships"
@@ -44,7 +49,9 @@ class Expense(Base):
     description = Column(String)
     amount = Column(Integer)
     created_by = Column(Integer, ForeignKey("users.user_id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.now)
+    group = relationship("Group", back_populates="groupexpenses")
+
 
 class ExpenseParticipant(Base):
     __tablename__ = "expense_participants"
