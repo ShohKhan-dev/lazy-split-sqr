@@ -1,5 +1,5 @@
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
 from app.database import Base
 from datetime import datetime
 from sqlalchemy.orm import relationship
@@ -23,7 +23,7 @@ class Group(Base):
     created_by = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.now)
 
-    total_expenses = Column(Integer, default=0)
+    total_expenses = Column(Float, default=0)
     total_members = Column(Integer, default=1)
 
     groupmembers = relationship("GroupMembership", back_populates="group")
@@ -47,7 +47,7 @@ class Expense(Base):
     expense_id = Column(Integer, primary_key=True, index=True)
     group_id = Column(Integer, ForeignKey("groups.group_id"))
     description = Column(String)
-    amount = Column(Integer)
+    amount = Column(Float)
     created_by = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.now)
     group = relationship("Group", back_populates="groupexpenses")
@@ -59,5 +59,5 @@ class ExpenseParticipant(Base):
     expense_participant_id = Column(Integer, primary_key=True, index=True)
     expense_id = Column(Integer, ForeignKey("expenses.expense_id"))
     user_id = Column(Integer, ForeignKey("users.user_id"))
-    amount_paid = Column(Integer)
-    amount_owed = Column(Integer)
+    amount_paid = Column(Float)
+    amount_owed = Column(Float)
