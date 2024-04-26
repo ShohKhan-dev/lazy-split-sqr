@@ -32,7 +32,7 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
 
 @router.get("/{expense_id}")
 def get_expense(expense_id: int, db: Session = Depends(get_db)):
-    expense = db.query(Expense).filter(Expense.expense_id == expense_id).first()
+    expense = db.query(Expense).options(joinedload(Expense.expense_participants)).filter(Expense.expense_id == expense_id).first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
     return expense

@@ -64,22 +64,3 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     db.refresh(group_membership)
     return group_membership
 
-
-# Delete a member from the group
-@router.delete("/{group_id}/delete_member/{user_id}")
-def delete_group_member(group_id: int, user_id: int, db: Session = Depends(get_db)):
-    group_membership = db.query(GroupMembership).filter(GroupMembership.group_id == group_id,
-                                                         GroupMembership.user_id == user_id).first()
-    if group_membership is None:
-        raise HTTPException(status_code=404, detail="Group member not found")
-
-    # Update total members of the group
-    group = db.query(Group).filter(Group.group_id == group_id).first()
-    if group:
-        group.total_members -= 1
-        db.commit()
-
-    db.delete(group_membership)
-    db.commit()
-    return {"message": "Group member deleted successfully"}
-
