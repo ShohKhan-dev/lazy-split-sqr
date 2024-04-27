@@ -12,7 +12,6 @@ class GroupCreate(BaseModel):
     created_by: int
 
 
-
 @router.post("/")
 def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db_group = Group(**group.dict())
@@ -29,15 +28,17 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(group_membership)
 
-
     return db_group
+
 
 @router.get("/{group_id}")
 def get_group(group_id: int, db: Session = Depends(get_db)):
-    group = db.query(Group).options(joinedload(Group.groupmembers), joinedload(Group.groupexpenses)).filter(Group.group_id == group_id).first()
+    group = db.query(Group).options(joinedload(Group.groupmembers), joinedload(Group.groupexpenses)).filter(
+        Group.group_id == group_id).first()
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
     return group
+
 
 @router.get("/")
 def get_groups(db: Session = Depends(get_db)):
@@ -53,7 +54,7 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Update total members of the group
     group.total_members += 1
     db.commit()
@@ -63,4 +64,3 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     db.commit()
     db.refresh(group_membership)
     return group_membership
-

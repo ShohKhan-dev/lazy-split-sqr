@@ -7,13 +7,14 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
 router = APIRouter()
+
 
 class UserCreate(BaseModel):
     username: str
     password: str
     email: str
+
 
 @router.get("/")
 def get_users(db: Session = Depends(get_db)):
@@ -49,7 +50,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # hashed_password = pwd_context.hash(user.password)
 
     db_user = User(username=user.username, email=user.email, password=user.password)
-    
+
     # Add the user to the database
     db.add(db_user)
     db.commit()
@@ -64,7 +65,7 @@ def get_user_groups(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     groups = db.query(Group).join(Group.groupmembers).filter(GroupMembership.user_id == user_id).all()
     return groups
 
@@ -74,7 +75,7 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     expenses_with_details = []
     expense_participants = db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
 
@@ -85,5 +86,5 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
             "expense_amount": expense.amount
         }
         expenses_with_details.append({**expense_participant.__dict__, **expense_details})
-        
+
     return expenses_with_details
