@@ -1,10 +1,9 @@
- 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.models import Group, Expense, ExpenseParticipant, User
+from app.models import Group, Expense, User
 from app.database import get_db, Base
 
 # Setup the TestClient
@@ -17,13 +16,16 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 Base.metadata.create_all(bind=engine)
 
+
 @pytest.fixture(scope="module")
 def override_get_db():
     database = TestingSessionLocal()
     yield database
     database.close()
 
+
 app.dependency_overrides[get_db] = override_get_db
+
 
 def test_create_expense():
     group_id = create_test_group()
@@ -38,6 +40,7 @@ def test_create_expense():
     assert data["created_by"] == 1
     assert "expense_id" in data
 
+
 def create_test_group():
     with TestingSessionLocal() as session:
         group = Group(group_name="Test Group", created_by=1)
@@ -46,12 +49,14 @@ def create_test_group():
         session.refresh(group)
         return group.group_id
 
+
 def test_get_expense():
     expense_id = create_test_expense()
     response = client.get(f"/expenses/{expense_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["expense_id"] == expense_id
+
 
 def create_test_expense():
     with TestingSessionLocal() as session:
@@ -61,12 +66,14 @@ def create_test_expense():
         session.refresh(expense)
         return expense.expense_id
 
+
 def test_get_expenses():
     create_test_expense()
     response = client.get("/expenses/")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
+
 
 def test_delete_expense():
     expense_id = create_test_expense()
@@ -79,6 +86,7 @@ def test_delete_expense():
         expense = session.query(Expense).filter(Expense.expense_id == expense_id).first()
         assert expense is None
 
+
 def test_create_expense_participant():
     expense_id = create_test_expense()
     user_id = create_test_user()
@@ -89,6 +97,7 @@ def test_create_expense_participant():
     data = response.json()
     assert data["expense_id"] == expense_id
     assert data["user_id"] == user_id
+
 
 def create_test_user():
     with TestingSessionLocal() as session:
