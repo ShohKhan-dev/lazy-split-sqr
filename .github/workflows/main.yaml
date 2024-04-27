@@ -4,17 +4,46 @@ name: lazy-split
 on: [push, pull_request]
 
 jobs:
-  test:
+  flake8-check:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.12'
+
       - name: Run image
         uses: abatilo/actions-poetry@v2
         with:
           poetry-version: '1.7.1'
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run flake8 test
+        run: poetry run flake8 app/
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.7.1'
+
       - name: Install dependencies
         run: poetry install
       
