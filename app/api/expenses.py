@@ -15,20 +15,9 @@ class ExpenseCreate(BaseModel):
 router = APIRouter()
 
 
-@router.post("/")
-def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
-    db_expense = Expense(**expense.dict())
-    db.add(db_expense)
-    db.commit()
-    db.refresh(db_expense)
-
-    # Update total expense of the group
-    group = db.query(Group).filter(Group.group_id == db_expense.group_id).first()
-    if group:
-        group.total_expenses += db_expense.amount
-        db.commit()
-
-    return db_expense
+@router.get("/")
+def get_expenses(db: Session = Depends(get_db)):
+    return db.query(Expense).all()
 
 
 @router.get("/{expense_id}")
@@ -40,9 +29,26 @@ def get_expense(expense_id: int, db: Session = Depends(get_db)):
     return expense
 
 
-@router.get("/")
-def get_expenses(db: Session = Depends(get_db)):
-    return db.query(Expense).all()
+@router.post("/")
+def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.user_id == expense.created_by).first() is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    group = db.query(Group).filter(Group.group_id == expense.group_id).first()
+    if group is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+
+    db_expense = Expense(**expense.dict())
+    db.add(db_expense)
+    db.commit()
+
+    # Update total expense of the group
+    group.total_expenses += expense.amount
+    db.commit()
+
+    db.refresh(db_expense)
+    return db_expense
 
 
 # Delete an expense
@@ -73,13 +79,12 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
 
 @router.post("/participant/")
 def create_expense_participant(expense_id: int, user_id: int, amount_paid: int, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.user_id == user_id).first() is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
     expense = db.query(Expense).filter(Expense.expense_id == expense_id).first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
-
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
 
     group = db.query(Group).filter(Group.group_id == expense.group_id).first()
     if group is None:
@@ -93,5 +98,6 @@ def create_expense_participant(expense_id: int, user_id: int, amount_paid: int, 
 
     db.add(expense_participant)
     db.commit()
+
     db.refresh(expense_participant)
     return expense_participant
