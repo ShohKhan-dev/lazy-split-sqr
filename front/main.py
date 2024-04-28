@@ -47,9 +47,20 @@ def get_user_expenses(user_id):
     return response.json()
 
 def get_user_by_username(username):
-    endpoint = f"{BASE_URL}/users/{username}"
+    endpoint = f"{BASE_URL}/users/username/{username}"
     response = requests.get(endpoint)
     return response.json()
+
+def get_user(user_id):
+    endpoint = f"{BASE_URL}/users/{user_id}"
+    response = requests.get(endpoint)
+    return response.json()
+
+def get_group(group_id):
+    endpoint = f"{BASE_URL}/groups/{group_id}"
+    response = requests.get(endpoint)
+    return response.json()
+
 
 def add_member(group_id, username):
     user = get_user_by_username(username)
@@ -64,6 +75,17 @@ def add_member(group_id, username):
     st.success(f"Added {username} to the group")
 
 
+def create_expense(group_id, created_by, amount, description):
+    if amount <= 0:
+        st.error(f"Amount should be a positive number")
+        return
+    endpoint = f"{BASE_URL}/expenses"
+    response = requests.post(endpoint, json={"group_id": group_id, "created_by":created_by, "amount": amount, "description":description}).json()
+    # if "created_at" not in response:
+    #     st.error(f"Couldn't create expense")
+    #     return
+    # st.success(f"Expense with {amount} roubles by {st.session_state.username} was created")
+
 def profile_display():
     st.sidebar.button("Logout", on_click=logout)
     st.sidebar.markdown("---")
@@ -71,16 +93,40 @@ def profile_display():
     st.sidebar.markdown(f"username: **{st.session_state.username}**")
     st.sidebar.markdown(f"email: **{st.session_state.email}**")
     st.sidebar.markdown("---")
-    
-def a_group_display(group):
-    st.title(group["group_name"])
-    st.markdown("---")
-    st.subheader(f"Total expenses: {group['total_expenses']}")
+
+
+def members_display(group):
     st.subheader(f"Total Members: {group['total_members']}")
-    st.markdown("---")
     username_to_add = st.text_input("Add member", placeholder="username")
     st.button("Add", on_click=lambda:add_member(group['group_id'], username_to_add))
-    
+    st.markdown("---")
+    members = [get_user(m['user_id'])['username'] for m in group['groupmembers']]
+    ul_markdown = "\n".join([f"- {item}" for item in members])
+    st.write(ul_markdown, unsafe_allow_html=True)
+        
+
+def expenses_display(group):
+    st.subheader(f"Total expenses: {group['total_expenses']}")
+    amount = st.number_input("Amount", placeholder="roubles", step=1)
+    desc = st.text_input("Description", placeholder="some description")
+    st.button("Create", on_click=lambda:create_expense(group["group_id"], st.session_state.user_id, amount, desc), key="expense_create_btn")
+    st.markdown("---")
+    expenses = [f"**{e['amount']}₽** ---- {e['description']}" for e in group['groupexpenses']]
+    ul_markdown = "\n".join([f"- {item}" for item in expenses])
+    st.write(ul_markdown, unsafe_allow_html=True)
+
+def a_group_display(group):
+    group = get_group(group["group_id"])
+    st.title(group["group_name"])
+
+    mode = st.radio("", ("Members", "Expenses"), horizontal=True)
+    st.markdown("---")
+    if mode == "Members":
+        members_display(group)
+    if mode == "Expenses":
+        expenses_display(group)
+
+
 def groups_display():
     groups = get_user_groups(st.session_state.user_id)
     group_names = [g["group_name"] for g in groups]
@@ -91,7 +137,7 @@ def groups_display():
             
     st.sidebar.markdown("---")
     group_name = st.sidebar.text_input("Create", placeholder="New Group Name")
-    st.sidebar.button("Create", on_click=lambda:create_group(group_name, st.session_state.user_id))
+    st.sidebar.button("Create", on_click=lambda:create_group(group_name, st.session_state.user_id), key="group_create_btn")
 
 
 def create_group(group_name, created_by):

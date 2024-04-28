@@ -20,7 +20,7 @@ class UserCreate(BaseModel):
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
-@router.get("/{username}")
+@router.get("/username/{username}")
 def get_user_by_username(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if user is None:
