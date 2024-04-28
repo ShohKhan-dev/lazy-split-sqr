@@ -38,7 +38,6 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
     if group is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-
     db_expense = Expense(**expense.dict())
     db.add(db_expense)
     db.commit()
