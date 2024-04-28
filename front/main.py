@@ -7,6 +7,14 @@ import time
 # Base URL for the FastAPI server
 BASE_URL = "http://localhost:8000"
 
+def register(email, username, password):
+    endpoint = f"{BASE_URL}/users"
+    response = requests.post(endpoint, json={"email":email, "username": username, "password": password}).json()
+    if "user_id" in response:
+        st.sidebar.success("Registered successfully")
+    else:
+        st.sidebar.error("Registration failed")
+
 def login(username, password):
     endpoint = f"{BASE_URL}/auth/login"
     response = requests.post(endpoint, json={"username": username, "password": password}).json()
@@ -93,19 +101,31 @@ def create_group(group_name, created_by):
     return response.json()
 
 
+def auth_display():
+    st.title("Lazy Split")
+    st.subheader("Please login to use the app")
+
+    mode = st.sidebar.radio("", ("Login", "Register"), horizontal=True)
+    if mode == "Register":
+        st.sidebar.title("Registration")
+        email = st.sidebar.text_input("Email")
+        username = st.sidebar.text_input("Username")
+        password = st.sidebar.text_input("Password", type="password")
+        st.sidebar.button("Register", on_click=lambda:register(email, username, password))
+    elif mode == "Login":
+        st.sidebar.title("Login")
+        username = st.sidebar.text_input("Username")
+        password = st.sidebar.text_input("Password", type="password")
+        st.sidebar.button("Login", on_click=lambda:login(username, password))
+
+
 # Streamlit UI
 def main():
     if st.session_state.get("logged_in"):
         profile_display()
         groups_display()
-
-    else :
-        st.title("Lazy Split")
-        st.subheader("Please login to use the app")
-        st.sidebar.title("Login")
-        username = st.sidebar.text_input("Username")
-        password = st.sidebar.text_input("Password", type="password")
-        st.sidebar.button("Login", on_click=lambda:login(username, password))
+    else:
+        auth_display()
 
 if __name__ == "__main__":
     main()
