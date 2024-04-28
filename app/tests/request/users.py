@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 from sqlalchemy.orm import sessionmaker
-from app.main import app
+from ...app.main import app
 from app.models import User, Group, GroupMembership
 from app.database import get_db, Base
 
