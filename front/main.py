@@ -1,3 +1,4 @@
+from gc import callbacks
 from click import group
 from numpy import outer
 import streamlit as st
@@ -75,16 +76,28 @@ def add_member(group_id, username):
     st.success(f"Added {username} to the group")
 
 
+def delete_expense_fn(expense_id):
+    def x():
+        endpoint = f"{BASE_URL}/expenses/{expense_id}"
+        response = requests.delete(endpoint)
+        if response.status_code != 200:
+            st.error("Couldn't delete expense")
+            return {}
+        
+        st.success("Deleted successfully")
+        return {}
+    return x
+
 def create_expense(group_id, created_by, amount, description):
     if amount <= 0:
         st.error(f"Amount should be a positive number")
         return
     endpoint = f"{BASE_URL}/expenses"
-    response = requests.post(endpoint, json={"group_id": group_id, "created_by":created_by, "amount": amount, "description":description}).json()
-    # if "created_at" not in response:
-    #     st.error(f"Couldn't create expense")
-    #     return
-    # st.success(f"Expense with {amount} roubles by {st.session_state.username} was created")
+    response = requests.post(endpoint, json={"group_id": group_id, "created_by":created_by, "amount": amount, "description":description})
+    if response.status_code != 200:
+        st.error(f"Couldn't create expense")
+        return
+    st.success(f"Expense with {amount} roubles by {st.session_state.username} was created")
 
 def profile_display():
     st.sidebar.button("Logout", on_click=logout)
@@ -99,21 +112,52 @@ def members_display(group):
     st.subheader(f"Total Members: {group['total_members']}")
     username_to_add = st.text_input("Add member", placeholder="username")
     st.button("Add", on_click=lambda:add_member(group['group_id'], username_to_add))
-    st.markdown("---")
+    st.write("<br>", unsafe_allow_html=True)
+    st.subheader("Members")
     members = [get_user(m['user_id'])['username'] for m in group['groupmembers']]
     ul_markdown = "\n".join([f"- {item}" for item in members])
     st.write(ul_markdown, unsafe_allow_html=True)
         
 
+def pay_expense_fn(expense_id, user_id, amount_paid):
+    def callback():
+        endpoint = f"{BASE_URL}/expenses/participant"
+        response = requests.post(endpoint, json={"expense_id":expense_id, "user_id": user_id, "amount_paid": amount_paid})
+        if response.status_code != 200:
+            st.error("Couldn't pay expense")
+            return {}
+        
+        st.success("Paid successfully")
+        return {}
+        
+    return callback
+
 def expenses_display(group):
-    st.subheader(f"Total expenses: {group['total_expenses']}")
-    amount = st.number_input("Amount", placeholder="roubles", step=1)
+    st.subheader(f"Total expenses: {group['total_expenses']}₽")
+    amount = st.number_input("Amount (₽)", placeholder="₽", step=1)
     desc = st.text_input("Description", placeholder="some description")
     st.button("Create", on_click=lambda:create_expense(group["group_id"], st.session_state.user_id, amount, desc), key="expense_create_btn")
-    st.markdown("---")
-    expenses = [f"**{e['amount']}₽** ---- {e['description']}" for e in group['groupexpenses']]
-    ul_markdown = "\n".join([f"- {item}" for item in expenses])
-    st.write(ul_markdown, unsafe_allow_html=True)
+    # st.markdown("---")
+    st.write("<br>", unsafe_allow_html=True)
+    st.subheader("Expenses")
+    for e in group['groupexpenses']:
+        st.write("<hr style='margin: 0;'>", unsafe_allow_html=True)
+        amount_col, desc_col, pay_col, del_col = st.columns([0.1, 0.5, 0.3, 0.15])
+        with amount_col:
+            st.markdown(f"**{e['amount']}₽**")
+
+        with desc_col:
+            st.text(e['description'])
+
+        with pay_col:
+            input_col, btn_col = st.columns(2)
+            with input_col:
+                amount_paid = st.number_input("Amount (₽)", step=1, key=e["expense_id"], placeholder="₽")
+            with btn_col:
+                st.button("Pay", key=f"pay_btn_expense_{e['expense_id']}", on_click=pay_expense_fn(e["expense_id"], st.session_state.user_id, amount_paid))
+        
+        with del_col:
+            st.button("Delete", key=f"del_btn_expense_{e['expense_id']}", on_click=delete_expense_fn(e["expense_id"]))
 
 def a_group_display(group):
     group = get_group(group["group_id"])
