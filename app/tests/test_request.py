@@ -1,10 +1,9 @@
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
 
 from sqlalchemy.orm import sessionmaker
 from app.main import app
-from app.models import *
+from app.models import User, Group, GroupMembership, Expense
 from app.database import get_db, Base
 
 # Setup the TestClient
@@ -133,7 +132,6 @@ class TestGroup:
         assert data["created_by"] == user.user_id
         assert "group_id" in data
 
-
     def test_get_group(self):
         user = User(username="testuser7", password="testpass7", email="test7@example.com")
         group = Group(group_name="TestGroup3", created_by=1)
@@ -203,69 +201,69 @@ class TestGroup:
 
 
 class TestExpenses:
-    # @staticmethod
-    # def create_test_user():
-    #     with TestingSessionLocal() as session:
-    #         user = User(username="Test User", email="test@example.com", password="password")
-    #         session.add(user)
-    #         session.commit()
-    #         session.refresh(user)
-    #         return user.user_id
-    #
-    # @staticmethod
-    # def create_test_expense():
-    #     with TestingSessionLocal() as session:
-    #         expense = Expense(group_id=1, description="Test Expense", amount=100, created_by=1)
-    #         session.add(expense)
-    #         session.commit()
-    #         session.refresh(expense)
-    #         return expense.expense_id
-    #
-    # # def test_create_expense(self):
-    # #     group_id = TestExpenses.create_test_group()
-    # #     response = client.post(
-    # #         "/expenses/",
-    # #         json={"group_id": group_id, "description": "Test Expense", "amount": 100, "created_by": 1}
-    # #     )
-    # #     assert response.status_code == 200
-    # #     data = response.json()
-    # #     assert data["description"] == "Test Expense"
-    # #     assert data["amount"] == 100
-    # #     assert data["created_by"] == 1
-    # #     assert "expense_id" in data
-    #
-    # def test_get_expense(self):
-    #     expense_id = TestExpenses.create_test_expense()
-    #     response = client.get(f"/expenses/{expense_id}")
-    #     assert response.status_code == 200
-    #     data = response.json()
-    #     assert data["expense_id"] == expense_id
-    #
-    # def test_get_expenses(self):
-    #     TestExpenses.create_test_expense()
-    #     response = client.get("/expenses/")
-    #     assert response.status_code == 200
-    #     data = response.json()
-    #     assert len(data) == 1
-    #
-    # def test_delete_expense(self):
-    #     expense_id = TestExpenses.create_test_expense()
-    #     response = client.delete(f"/expenses/{expense_id}")
-    #     assert response.status_code == 200
-    #     data = response.json()
-    #     assert data["message"] == "Expense deleted successfully"
-    #     # Verify expense is deleted
-    #     with TestingSessionLocal() as session:
-    #         expense = session.query(Expense).filter(Expense.expense_id == expense_id).first()
-    #         assert expense is None
-    #
-    # def test_create_expense_participant(self):
-    #     expense_id = TestExpenses.create_test_expense()
-    #     user_id = TestExpenses.create_test_user()
+    @staticmethod
+    def create_test_user():
+        with TestingSessionLocal() as session:
+            user = User(username="Test User", email="test@example.com", password="password")
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            return user.user_id
+
+    @staticmethod
+    def create_test_expense():
+        with TestingSessionLocal() as session:
+            expense = Expense(group_id=1, description="Test Expense", amount=100, created_by=1)
+            session.add(expense)
+            session.commit()
+            session.refresh(expense)
+            return expense.expense_id
+
+    # def test_create_expense(self):
+    #     group_id = TestExpenses.create_test_group()
     #     response = client.post(
-    #         f"/expenses/participant/?expense_id={expense_id}&user_id={user_id}&amount_paid=50",
+    #         "/expenses/",
+    #         json={"group_id": group_id, "description": "Test Expense", "amount": 100, "created_by": 1}
     #     )
     #     assert response.status_code == 200
     #     data = response.json()
-    #     assert data["expense_id"] == expense_id
-    #     assert data["user_id"] == user_id
+    #     assert data["description"] == "Test Expense"
+    #     assert data["amount"] == 100
+    #     assert data["created_by"] == 1
+    #     assert "expense_id" in data
+
+    def test_get_expenses(self):
+        TestExpenses.create_test_expense()
+        response = client.get("/expenses/")
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 1
+
+    def test_get_expense(self):
+        expense_id = TestExpenses.create_test_expense()
+        response = client.get(f"/expenses/{expense_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["expense_id"] == expense_id
+
+    def test_delete_expense(self):
+        expense_id = TestExpenses.create_test_expense()
+        response = client.delete(f"/expenses/{expense_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["message"] == "Expense deleted successfully"
+        # Verify expense is deleted
+        with TestingSessionLocal() as session:
+            expense = session.query(Expense).filter(Expense.expense_id == expense_id).first()
+            assert expense is None
+
+    def test_create_expense_participant(self):
+        expense_id = TestExpenses.create_test_expense()
+        user_id = TestExpenses.create_test_user()
+        response = client.post(
+            f"/expenses/participant/?expense_id={expense_id}&user_id={user_id}&amount_paid=50",
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["expense_id"] == expense_id
+        assert data["user_id"] == user_id
