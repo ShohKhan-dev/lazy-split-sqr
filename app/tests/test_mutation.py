@@ -295,10 +295,9 @@ class TestGroupAPI(unittest.TestCase):
         group_create_data = GroupCreate(group_name="Test Group", created_by=1)
         data = create_group(group_create_data, db=self.db)
 
-        assert isinstance(data, dict)
-        assert data["group_name"] == group_create_data.group_name
-        assert data["created_by"] == group_create_data.created_by
-        assert data["group_id"] == 1
+        assert data.group_name == group_create_data.group_name
+        assert data.created_by == group_create_data.created_by
+        assert data.group_id == 1
 
         group = self.db.query(Group).first()
 
@@ -307,7 +306,7 @@ class TestGroupAPI(unittest.TestCase):
         assert group.group_id == 1
 
         group_membership = self.db.query(GroupMembership).first()
-        assert group_membership.group_id == data["group_id"]
+        assert group_membership.group_id == data.group_id
 
         assert group_membership.user_id == user.user_id
 
@@ -455,7 +454,7 @@ class TestExpenseAPI(unittest.TestCase):
             group_id=1, created_by=1, description="desc", amount=100
         )
         data = create_expense(expense_create_data, db=self.db)
-        
+
         assert data["expense_id"] == 1
         assert data["group_id"] == expense_create_data.group_id
         assert data["created_by"] == expense_create_data.created_by
