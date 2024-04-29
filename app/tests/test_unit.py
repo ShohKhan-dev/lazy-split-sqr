@@ -1,6 +1,7 @@
 from app.api.users import UserCreate, get_users, get_user, create_user, get_user_groups, get_user_expenses
 from app.api.groups import GroupCreate, get_groups, get_group, create_group, add_group_member
-from app.api.expenses import get_expenses, get_expense, create_expense, delete_expense, create_expense_participant, ExpenseCreate
+from app.api.expenses import get_expenses, get_expense, create_expense, delete_expense, create_expense_participant, \
+    ExpenseCreate
 from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
 from unittest.mock import MagicMock
 import pytest
@@ -122,7 +123,7 @@ class TestGroupAPI:
     def test_add_group_member(self, mock_db):
         group = Group(group_id=1, group_name="Test Group", created_by=1, total_members=1)
         user = User(user_id=1, username="Test User", email="test@example.com", password="password")
-        mock_db.query().filter().first.side_effect = [user, group]
+        mock_db.query().filter().first.side_effect = [user, group, None]
 
         data = add_group_member(group_id=1, user_id=1, db=mock_db)
 
@@ -181,14 +182,13 @@ class TestExpenseAPI:
 
     def test_create_expense_participant(self, mock_db):
         expense = Expense(expense_id=1, group_id=1, description="Test Expense", amount=100, created_by=1)
-        user = User(user_id=1, username="Test User", email="test@example.com", password="password")
         group = Group(group_id=1, group_name="Test Group", created_by=1, total_members=1)
-        mock_db.query().filter().first.side_effect = [user, expense, group]
+        mock_db.query().filter().first.side_effect = [expense, group]
 
         data = create_expense_participant(expense_id=1, user_id=1, amount_paid=100, db=mock_db)
 
         assert isinstance(data, ExpenseParticipant)
         assert data.expense_id == expense.expense_id
-        assert data.user_id == user.user_id
+        assert data.user_id == expense.created_by
         assert data.amount_paid == 100
         assert data.amount_owed == 0
