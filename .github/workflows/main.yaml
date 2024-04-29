@@ -1,0 +1,54 @@
+name: lazy-split
+
+# add your pipline description below
+on: [push, pull_request]
+
+jobs:
+  flake8-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.7.1'
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run flake8 test
+        run: poetry run flake8 app/
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '1.7.1'
+
+      - name: Install dependencies
+        run: poetry install
+      
+      - name: Run tests
+        run: poetry run pytest --cov app/ --cov-branch --cov-report=term --cov-fail-under=85
+
+      - name: Run bandit
+        run: poetry run bandit app

@@ -7,8 +7,8 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
 router = APIRouter()
+
 
 class UserCreate(BaseModel):
     username: str
@@ -20,12 +20,14 @@ class UserCreate(BaseModel):
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
+
 @router.get("/username/{username}")
 def get_user_by_username(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 @router.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):
@@ -38,15 +40,13 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @router.post("/")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the username or email already exists
-    existing_user = db.query(User).filter(User.username == user.username).first()
-    if existing_user:
+    if db.query(User).filter(User.username == user.username).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already exists"
         )
 
-    existing_email = db.query(User).filter(User.email == user.email).first()
-    if existing_email:
+    if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -55,33 +55,31 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Hash the password before storing it in the database
     # hashed_password = pwd_context.hash(user.password)
 
-    db_user = User(username=user.username, email=user.email, password=user.password)
-    
+    db_user = User(**user.dict())
+
     # Add the user to the database
     db.add(db_user)
     db.commit()
-    db.refresh(db_user)
 
     # Return a response with the created user data
+    db.refresh(db_user)
     return db_user
 
 
 @router.get("/{user_id}/groups")
 def get_user_groups(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user is None:
+    if db.query(User).filter(User.user_id == user_id).first() is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     groups = db.query(Group).join(Group.groupmembers).filter(GroupMembership.user_id == user_id).all()
     return groups
 
 
 @router.get("/{user_id}/expenses")
 def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if user is None:
+    if db.query(User).filter(User.user_id == user_id).first() is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     expenses_with_details = []
     expense_participants = db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
 
@@ -92,5 +90,5 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
             "expense_amount": expense.amount
         }
         expenses_with_details.append({**expense_participant.__dict__, **expense_details})
-        
+
     return expenses_with_details

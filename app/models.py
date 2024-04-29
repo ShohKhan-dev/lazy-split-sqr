@@ -1,4 +1,3 @@
-
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
 from app.database import Base
 from datetime import datetime
@@ -14,6 +13,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
 
     groupmembers = relationship("GroupMembership", back_populates="user")
+
 
 class Group(Base):
     __tablename__ = "groups"
@@ -40,6 +40,7 @@ class GroupMembership(Base):
 
     group = relationship("Group", back_populates="groupmembers")
     user = relationship("User", back_populates="groupmembers")
+
 
 class Expense(Base):
     __tablename__ = "expenses"
