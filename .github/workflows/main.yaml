@@ -31,7 +31,7 @@ jobs:
         run: poetry run flake8 --ignore=F403,F401,W503 app front
       
       - name: Run tests
-        run: poetry run pytest --cov app/ front/ --cov-branch --cov-report=term --cov-fail-under=80
+        run: poetry run pytest --cov . --cov-branch --cov-report=term --cov-fail-under=80
 
       - name: Run bandit
         run: poetry run bandit app
