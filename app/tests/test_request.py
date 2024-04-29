@@ -6,6 +6,8 @@ from app.main import app
 from app.models import User, Group, GroupMembership, Expense
 from app.database import get_db, Base
 
+import unittest
+
 # Setup the TestClient
 client = TestClient(app)
 
@@ -20,24 +22,23 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base.metadata.create_all(bind=engine)
-
 test_users = [
     {"username": "testuser1", "password": "testpass1", "email": "test1@example.com"},
     {"username": "testuser2", "password": "testpass2", "email": "test2@example.com"},
 ]
 
 
-def override_get_db():
-    database = TestingSessionLocal()
-    yield database
-    database.close()
+class TestUser(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
 
+        app.dependency_overrides[get_db] = lambda: self.db
 
-app.dependency_overrides[get_db] = override_get_db
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
 
-
-class TestUser:
     def test_get_users(self):
         with TestingSessionLocal() as session:
             session.add_all([
@@ -112,7 +113,17 @@ class TestUser:
         assert ok, "User Group not founded"
 
 
-class TestGroup:
+class TestGroup(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
+
+        app.dependency_overrides[get_db] = lambda: self.db
+
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
+
     def test_create_group(self):
         user = User(username="testuser6", password="testpass6", email="test6@example.com")
         with TestingSessionLocal() as session:
@@ -200,7 +211,17 @@ class TestGroup:
         assert "membership_id" in data
 
 
-class TestExpenses:
+class TestExpenses(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
+
+        app.dependency_overrides[get_db] = lambda: self.db
+
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
+
     @staticmethod
     def create_test_user():
         with TestingSessionLocal() as session:
@@ -209,6 +230,15 @@ class TestExpenses:
             session.commit()
             session.refresh(user)
             return user.user_id
+
+    @staticmethod
+    def create_test_group(user_id):
+        with TestingSessionLocal() as session:
+            group = Group(group_name="Test Group", created_by=user_id, total_expenses=100)
+            session.add(group)
+            session.commit()
+            session.refresh(group)
+            return group.group_id
 
     @staticmethod
     def create_test_expense():
@@ -251,6 +281,7 @@ class TestExpenses:
         assert data["expense_id"] == expense_id
 
     def test_delete_expense(self):
+        TestExpenses.create_test_group(1)
         expense_id = TestExpenses.create_test_expense()
         response = client.delete(f"/expenses/{expense_id}")
         assert response.status_code == 200
@@ -262,10 +293,12 @@ class TestExpenses:
             assert expense is None
 
     def test_create_expense_participant(self):
-        expense_id = TestExpenses.create_test_expense()
         user_id = TestExpenses.create_test_user()
+        TestExpenses.create_test_group(user_id)
+        expense_id = TestExpenses.create_test_expense()
         response = client.post(
-            f"/expenses/participant/?expense_id={expense_id}&user_id={user_id}&amount_paid=50",
+            f"/expenses/participant/",
+            json={"expense_id": expense_id, "user_id": user_id, "amount_paid": 50}
         )
         assert response.status_code == 200
         data = response.json()

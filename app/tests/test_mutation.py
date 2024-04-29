@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from app.api.users import UserCreate, get_user, create_user, get_user_groups, get_user_expenses
 from app.api.groups import GroupCreate, get_group, create_group, add_group_member
 from app.api.expenses import get_expense, create_expense, delete_expense, create_expense_participant, \
-    ExpenseCreate
+    ExpenseCreate, CreateExpenseParticipant
 from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
 from sqlalchemy import create_engine, StaticPool
 
@@ -363,7 +363,8 @@ class TestExpenseAPI(unittest.TestCase):
         self.db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
-            create_expense_participant(expense_id=1, user_id=1, amount_paid=100, db=self.db)
+            expense_create_data = {"expense_id": 1, "user_id": 1, "amount_paid": 100}
+            create_expense_participant(CreateExpenseParticipant(**expense_create_data), db=self.db)
 
         assert exc_info.value.status_code == 404
         assert "Expense not found" in str(exc_info.value.detail)
@@ -374,16 +375,17 @@ class TestExpenseAPI(unittest.TestCase):
         self.db.add_all([group, expense])
         self.db.commit()
 
-        data = create_expense_participant(expense_id=1, user_id=1, amount_paid=100, db=self.db)
+        expense_create_data = CreateExpenseParticipant(expense_id=1, user_id=1, amount_paid=100)
+        data = create_expense_participant(expense_create_data, db=self.db)
 
-        assert data.expense_id == expense.expense_id
-        assert data.user_id == 1
-        assert data.amount_paid == 100
+        assert data.expense_id == expense_create_data.expense_id
+        assert data.user_id == expense_create_data.user_id
+        assert data.amount_paid == expense_create_data.amount_paid
         assert data.amount_owed == 50
 
         expense_participant = self.db.query(ExpenseParticipant).first()
 
-        assert expense_participant.expense_id == expense.expense_id
-        assert expense_participant.user_id == 1
-        assert expense_participant.amount_paid == 100
+        assert expense_participant.expense_id == expense_create_data.expense_id
+        assert expense_participant.user_id == expense_create_data.user_id
+        assert expense_participant.amount_paid == expense_create_data.amount_paid
         assert expense_participant.amount_owed == 50

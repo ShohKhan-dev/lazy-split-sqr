@@ -89,6 +89,7 @@ def create_expense_participant(p: CreateExpenseParticipant, db: Session = Depend
     expense = db.query(Expense).filter(Expense.expense_id == p.expense_id).first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
+
     group = db.query(Group).filter(Group.group_id == expense.group_id).first()
 
     average_amount = expense.amount / group.total_members
