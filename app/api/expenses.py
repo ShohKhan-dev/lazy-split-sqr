@@ -28,7 +28,18 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
         group.total_expenses += db_expense.amount
         db.commit()
 
-    return db_expense
+    
+    expense_data = {
+        "expense_id": db_expense.expense_id,
+        "group_id": db_expense.group_id,
+        "description": db_expense.description,
+        "amount": db_expense.amount,
+        "created_by": db_expense.created_by,
+        "created_at": db_expense.created_at
+    }
+
+    # Return the expense data
+    return expense_data
 
 @router.get("/{expense_id}")
 def get_expense(expense_id: int, db: Session = Depends(get_db)):
