@@ -13,6 +13,12 @@ class ExpenseCreate(BaseModel):
     created_by: int
 
 
+class CreateExpenseParticipant(BaseModel):
+    expense_id: int
+    user_id: int
+    amount_paid: int
+
+
 router = APIRouter()
 
 
@@ -78,18 +84,17 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     return {"message": "Expense deleted successfully"}
 
 
-@router.post("/participant/")
-def create_expense_participant(expense_id: int, user_id: int, amount_paid: int, db: Session = Depends(get_db)):
-    expense = db.query(Expense).filter(Expense.expense_id == expense_id).first()
+@router.post("/participant")
+def create_expense_participant(p: CreateExpenseParticipant, db: Session = Depends(get_db)):
+    expense = db.query(Expense).filter(Expense.expense_id == p.expense_id).first()
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
-
     group = db.query(Group).filter(Group.group_id == expense.group_id).first()
 
     average_amount = expense.amount / group.total_members
-    amount_owed = amount_paid - average_amount
+    amount_owed = p.amount_paid - average_amount
 
-    expense_participant = ExpenseParticipant(expense_id=expense_id, user_id=user_id, amount_paid=amount_paid,
+    expense_participant = ExpenseParticipant(expense_id=p.expense_id, user_id=p.user_id, amount_paid=p.amount_paid,
                                              amount_owed=amount_owed)
 
     db.add(expense_participant)
