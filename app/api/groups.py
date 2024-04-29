@@ -29,8 +29,15 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(group_membership)
 
+    group_data = {
+        "group_id": db_group.group_id,
+        "group_name": db_group.group_name,
+        "created_by": db_group.created_by,
+        "created_at": db_group.created_at,
+    }
 
-    return db_group
+    return group_data
+
 
 @router.get("/{group_id}")
 def get_group(group_id: int, db: Session = Depends(get_db)):
@@ -53,6 +60,11 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    membership = db.query(GroupMembership).filter_by(group_id=group_id, user_id=user_id).first()
+
+    if membership:
+        raise HTTPException(status_code=409, detail="User is already a member of the group")
     
     # Update total members of the group
     group.total_members += 1
