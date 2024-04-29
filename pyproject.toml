@@ -19,6 +19,7 @@ pytest = "^8.1.1"
 flake8 = "^7.0.0"
 mutmut = "^2.4.5"
 streamlit = "^1.33.0"
+bandit = "^1.7.8"
 
 [tool.mutmut]
 paths_to_mutate="app/api"
