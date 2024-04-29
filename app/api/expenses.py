@@ -55,7 +55,17 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
     db.commit()
 
     db.refresh(db_expense)
-    return db_expense
+    expense_data = {
+        "expense_id": db_expense.expense_id,
+        "group_id": db_expense.group_id,
+        "description": db_expense.description,
+        "amount": db_expense.amount,
+        "created_by": db_expense.created_by,
+        "created_at": db_expense.created_at
+    }
+
+    # Return the expense data
+    return expense_data
 
 
 # Delete an expense

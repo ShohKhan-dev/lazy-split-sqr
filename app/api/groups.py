@@ -41,8 +41,14 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db.add(group_membership)
     db.commit()
 
-    db.refresh(db_group)
-    return db_group
+    group_data = {
+        "group_id": db_group.group_id,
+        "group_name": db_group.group_name,
+        "created_by": db_group.created_by,
+        "created_at": db_group.created_at,
+    }
+
+    return group_data
 
 
 @router.post("/{group_id}/add_member/{user_id}")
