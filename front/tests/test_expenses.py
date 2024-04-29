@@ -1,5 +1,5 @@
-from mocks import *
 from front.main import delete_expense_fn, pay_expense_fn, BASE_URL
+
 
 def test_delete_expense_fn_success(requests_mock, st_success_mock):
     expense_id = 123
@@ -37,7 +37,7 @@ def test_pay_expense_fn_success(requests_mock, st_success_mock):
 
     requests_mock.post.assert_called_once_with(
         f"{BASE_URL}/expenses/participant",
-        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid}
+        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid},
     )
 
     st_success_mock.assert_called_once_with("Paid successfully")
@@ -56,7 +56,7 @@ def test_pay_expense_fn_error(requests_mock, st_error_mock):
 
     requests_mock.post.assert_called_once_with(
         f"{BASE_URL}/expenses/participant",
-        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid}
+        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid},
     )
 
     st_error_mock.assert_called_once_with("Couldn't pay expense")

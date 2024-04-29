@@ -20,8 +20,12 @@ def get_groups(db: Session = Depends(get_db)):
 
 @router.get("/{group_id}")
 def get_group(group_id: int, db: Session = Depends(get_db)):
-    group = db.query(Group).options(joinedload(Group.groupmembers), joinedload(Group.groupexpenses)).filter(
-        Group.group_id == group_id).first()
+    group = (
+        db.query(Group)
+        .options(joinedload(Group.groupmembers), joinedload(Group.groupexpenses))
+        .filter(Group.group_id == group_id)
+        .first()
+    )
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
     return group
@@ -37,7 +41,9 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
     db.commit()
 
     db.refresh(db_group)
-    group_membership = GroupMembership(group_id=db_group.group_id, user_id=group.created_by, is_admin=True)
+    group_membership = GroupMembership(
+        group_id=db_group.group_id, user_id=group.created_by, is_admin=True
+    )
     db.add(group_membership)
     db.commit()
 
@@ -60,8 +66,15 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
 
-    if db.query(GroupMembership).filter(
-            and_(GroupMembership.group_id == group_id, GroupMembership.user_id == user_id)).first():
+    if (
+        db.query(GroupMembership)
+        .filter(
+            and_(
+                GroupMembership.group_id == group_id, GroupMembership.user_id == user_id
+            )
+        )
+        .first()
+    ):
         raise HTTPException(status_code=404, detail="Already in group")
 
     # Update total members of the group

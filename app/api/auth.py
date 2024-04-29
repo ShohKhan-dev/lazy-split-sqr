@@ -18,7 +18,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if db_user is None or db_user.password != user.password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password"
+            detail="Incorrect username or password",
         )
 
     return {"status": "success", "user_id": db_user.user_id, "email": db_user.email}

@@ -40,15 +40,16 @@ class TestAuth(unittest.TestCase):
         self.db.close()
 
     def test_login_user(self):
-        user = User(username="testuser3", password="testpass3", email="test3@example.com")
+        user = User(
+            username="testuser3", password="testpass3", email="test3@example.com"
+        )
         with TestingSessionLocal() as session:
             session.add(user)
             session.commit()
             session.refresh(user)
 
         response = client.post(
-            "/auth/login",
-            json={"username": "testuser3", "password": "testpass3"}
+            "/auth/login", json={"username": "testuser3", "password": "testpass3"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -71,10 +72,20 @@ class TestUser(unittest.TestCase):
 
     def test_get_users(self):
         with TestingSessionLocal() as session:
-            session.add_all([
-                User(username="testuser1", password="testpass1", email="test1@example.com"),
-                User(username="testuser2", password="testpass2", email="test2@example.com"),
-            ])
+            session.add_all(
+                [
+                    User(
+                        username="testuser1",
+                        password="testpass1",
+                        email="test1@example.com",
+                    ),
+                    User(
+                        username="testuser2",
+                        password="testpass2",
+                        email="test2@example.com",
+                    ),
+                ]
+            )
             session.commit()
 
         response = client.get("/users/")
@@ -82,7 +93,9 @@ class TestUser(unittest.TestCase):
         assert len(response.json()) >= len(test_users)
 
     def test_get_single_user(self):
-        user = User(username="testuser3", password="testpass3", email="test3@example.com")
+        user = User(
+            username="testuser3", password="testpass3", email="test3@example.com"
+        )
         with TestingSessionLocal() as session:
             session.add(user)
             session.commit()
@@ -99,7 +112,11 @@ class TestUser(unittest.TestCase):
     def test_create_user(self):
         response = client.post(
             "/users/",
-            json={"username": "testuser4", "password": "testpass4", "email": "test4@example.com"}
+            json={
+                "username": "testuser4",
+                "password": "testpass4",
+                "email": "test4@example.com",
+            },
         )
         assert response.status_code == 200
         data = response.json()
@@ -109,7 +126,9 @@ class TestUser(unittest.TestCase):
         assert "user_id" in data
 
     def test_get_user_groups(self):
-        user = User(username="testuser5", password="testpass5", email="test5@example.com")
+        user = User(
+            username="testuser5", password="testpass5", email="test5@example.com"
+        )
         db_group = Group(group_name="TestGroup1", created_by=1)
 
         with TestingSessionLocal() as session:
@@ -121,7 +140,11 @@ class TestUser(unittest.TestCase):
             session.commit()
             session.refresh(db_group)
 
-            session.add(GroupMembership(group_id=db_group.group_id, user_id=user.user_id, is_admin=True))
+            session.add(
+                GroupMembership(
+                    group_id=db_group.group_id, user_id=user.user_id, is_admin=True
+                )
+            )
             session.commit()
 
             session.refresh(user)
@@ -136,7 +159,10 @@ class TestUser(unittest.TestCase):
 
         ok = False
         for response_group in data:
-            if response_group["group_name"] == db_group.group_name and response_group["created_by"] == user.user_id:
+            if (
+                response_group["group_name"] == db_group.group_name
+                and response_group["created_by"] == user.user_id
+            ):
                 ok = True
                 break
 
@@ -155,7 +181,9 @@ class TestGroup(unittest.TestCase):
         self.db.close()
 
     def test_create_group(self):
-        user = User(username="testuser6", password="testpass6", email="test6@example.com")
+        user = User(
+            username="testuser6", password="testpass6", email="test6@example.com"
+        )
         with TestingSessionLocal() as session:
             session.add(user)
             session.commit()
@@ -163,8 +191,7 @@ class TestGroup(unittest.TestCase):
             session.refresh(user)
 
         response = client.post(
-            "/groups/",
-            json={"group_name": "TestGroup2", "created_by": user.user_id}
+            "/groups/", json={"group_name": "TestGroup2", "created_by": user.user_id}
         )
         assert response.status_code == 200
         data = response.json()
@@ -174,7 +201,9 @@ class TestGroup(unittest.TestCase):
         assert "group_id" in data
 
     def test_get_group(self):
-        user = User(username="testuser7", password="testpass7", email="test7@example.com")
+        user = User(
+            username="testuser7", password="testpass7", email="test7@example.com"
+        )
         group = Group(group_name="TestGroup3", created_by=1)
         with TestingSessionLocal() as session:
             session.add(user)
@@ -198,17 +227,23 @@ class TestGroup(unittest.TestCase):
 
     def test_get_groups(self):
         with TestingSessionLocal() as session:
-            user_1 = User(username="testuser8", password="testpass8", email="test8@example.com")
-            user_2 = User(username="testuser9", password="testpass9", email="test9@example.com")
+            user_1 = User(
+                username="testuser8", password="testpass8", email="test8@example.com"
+            )
+            user_2 = User(
+                username="testuser9", password="testpass9", email="test9@example.com"
+            )
             session.add_all([user_1, user_2])
             session.commit()
             session.refresh(user_1)
             session.refresh(user_2)
 
-            session.add_all([
-                Group(group_name="TestGroup4", created_by=user_1.user_id),
-                Group(group_name="TestGroup5", created_by=user_2.user_id)
-            ])
+            session.add_all(
+                [
+                    Group(group_name="TestGroup4", created_by=user_1.user_id),
+                    Group(group_name="TestGroup5", created_by=user_2.user_id),
+                ]
+            )
             session.commit()
 
         response = client.get("/groups/")
@@ -218,7 +253,9 @@ class TestGroup(unittest.TestCase):
         assert len(data) >= 2
 
     def test_add_group_member(self):
-        user = User(username="testuser10", password="testpass10", email="test10@example.com")
+        user = User(
+            username="testuser10", password="testpass10", email="test10@example.com"
+        )
         group = Group(group_name="TestGroup6", created_by=1)
         with TestingSessionLocal() as session:
             session.add(user)
@@ -255,7 +292,9 @@ class TestExpenses(unittest.TestCase):
     @staticmethod
     def create_test_user():
         with TestingSessionLocal() as session:
-            user = User(username="Test User", email="test@example.com", password="password")
+            user = User(
+                username="Test User", email="test@example.com", password="password"
+            )
             session.add(user)
             session.commit()
             session.refresh(user)
@@ -264,7 +303,9 @@ class TestExpenses(unittest.TestCase):
     @staticmethod
     def create_test_group(user_id):
         with TestingSessionLocal() as session:
-            group = Group(group_name="Test Group", created_by=user_id, total_expenses=100)
+            group = Group(
+                group_name="Test Group", created_by=user_id, total_expenses=100
+            )
             session.add(group)
             session.commit()
             session.refresh(group)
@@ -273,7 +314,9 @@ class TestExpenses(unittest.TestCase):
     @staticmethod
     def create_test_expense():
         with TestingSessionLocal() as session:
-            expense = Expense(group_id=1, description="Test Expense", amount=100, created_by=1)
+            expense = Expense(
+                group_id=1, description="Test Expense", amount=100, created_by=1
+            )
             session.add(expense)
             session.commit()
             session.refresh(expense)
@@ -306,7 +349,9 @@ class TestExpenses(unittest.TestCase):
         assert data["message"] == "Expense deleted successfully"
         # Verify expense is deleted
         with TestingSessionLocal() as session:
-            expense = session.query(Expense).filter(Expense.expense_id == expense_id).first()
+            expense = (
+                session.query(Expense).filter(Expense.expense_id == expense_id).first()
+            )
             assert expense is None
 
     def test_create_expense_participant(self):
@@ -315,7 +360,7 @@ class TestExpenses(unittest.TestCase):
         expense_id = TestExpenses.create_test_expense()
         response = client.post(
             "/expenses/participant/",
-            json={"expense_id": expense_id, "user_id": user_id, "amount_paid": 50}
+            json={"expense_id": expense_id, "user_id": user_id, "amount_paid": 50},
         )
         assert response.status_code == 200
         data = response.json()

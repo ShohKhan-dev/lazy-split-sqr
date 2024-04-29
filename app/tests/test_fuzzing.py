@@ -123,11 +123,21 @@ class TestExpenseFuzz(unittest.TestCase):
         self.db.invalidate()
         self.db.close()
 
-    @given(group_id=id_strategy, description=str_strategy, amount=amount_strategy, created_by=id_strategy)
+    @given(
+        group_id=id_strategy,
+        description=str_strategy,
+        amount=amount_strategy,
+        created_by=id_strategy,
+    )
     def test_create_expense(self, group_id, description, amount, created_by):
         response = client.post(
             "/expenses/",
-            json={"group_id": group_id, "description": description, "amount": amount, "created_by": created_by},
+            json={
+                "group_id": group_id,
+                "description": description,
+                "amount": amount,
+                "created_by": created_by,
+            },
         )
         assert response.status_code == 200 or response.status_code == 404
 
@@ -145,6 +155,10 @@ class TestExpenseFuzz(unittest.TestCase):
     def test_create_expense_participant(self, expense_id, user_id, amount_paid):
         response = client.post(
             "/expenses/participant/",
-            json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid}
+            json={
+                "expense_id": expense_id,
+                "user_id": user_id,
+                "amount_paid": amount_paid,
+            },
         )
         assert response.status_code == 200 or response.status_code == 404
