@@ -15,10 +15,17 @@ class UserCreate(BaseModel):
     password: str
     email: str
 
+
 @router.get("/")
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
+@router.get("/username/{username}")
+def get_user_by_username(username: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
 @router.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):

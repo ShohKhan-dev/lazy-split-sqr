@@ -14,6 +14,12 @@
 
 got to http://127.0.0.1:8000/docs#/
 
+
+### to run streamlit
+```
+>>> poetry run streamlit run front/main.py
+```
+
 # Tasks
 
 ## We need to do:

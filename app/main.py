@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import users, groups, expenses
+from app.api import users, groups, expenses, auth
 from app.database import Base, SessionLocal, engine
 app = FastAPI()
 # @app.get("/")
@@ -11,8 +11,8 @@ Base.metadata.create_all(bind=engine)
 
 
 
-
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(groups.router, prefix="/groups", tags=["groups"])
 app.include_router(expenses.router, prefix="/expenses", tags=["expenses"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
