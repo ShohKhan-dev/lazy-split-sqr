@@ -77,7 +77,6 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
         "created_at": db_expense.created_at,
     }
 
-    # Return the expense data
     return expense_data
 
 
