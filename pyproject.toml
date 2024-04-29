@@ -28,6 +28,7 @@ tests_dir="app/tests"
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
 hypothesis = "^6.100.2"
+black = "^24.4.2"
 
 [build-system]
 requires = ["poetry-core"]
