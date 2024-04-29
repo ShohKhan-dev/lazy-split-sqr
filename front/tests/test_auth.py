@@ -1,6 +1,5 @@
-import pytest
 from mocks import *
-from front.main import st, register, auth_display, main, login
+from front.main import register, auth_display, main, login
 
 
 def test_register_success(requests_mock, st_sidebar_success_mock):
@@ -15,7 +14,9 @@ def test_register_success(requests_mock, st_sidebar_success_mock):
 
 def test_register_failure(requests_mock, st_sidebar_error_mock):
     requests_mock.post.return_value.status_code = 400
-    requests_mock.post.return_value.json.return_value = {"error": "Invalid request"}
+    requests_mock.post.return_value.json.return_value = {
+        "error": "Invalid request"
+    }
 
     register("test@example.com", "test_user", "password")
 
@@ -23,7 +24,12 @@ def test_register_failure(requests_mock, st_sidebar_error_mock):
 
 
 def test_login_success(requests_mock, st_sidebar_success_mock):
-    response_json = {"status": "success", "user_id": 123, "email": "test@example.com", "username": "test_user"}
+    response_json = {
+        "status": "success",
+        "user_id": 123,
+        "email": "test@example.com",
+        "username": "test_user",
+    }
     requests_mock.post.return_value.json.return_value = response_json
 
     login("test_user", "password")
@@ -37,7 +43,9 @@ def test_login_failure(requests_mock, st_sidebar_error_mock):
 
     login("invalid_user", "invalid_password")
 
-    st_sidebar_error_mock.assert_called_once_with("Login failed. Invalid username or password.")
+    st_sidebar_error_mock.assert_called_once_with(
+        "Login failed. Invalid username or password."
+    )
 
 
 def test_auth_display_register(st_sidebar_radio_mock, st_sidebar_title_mock):
@@ -56,7 +64,12 @@ def test_auth_display_login(st_sidebar_radio_mock, st_sidebar_title_mock):
     st_sidebar_title_mock.assert_called_once_with("Login")
 
 
-def test_main_logged_in(st_session_state_mock, profile_display_mock, groups_display_mock, auth_display_mock):
+def test_main_logged_in(
+    st_session_state_mock,
+    profile_display_mock,
+    groups_display_mock,
+    auth_display_mock,
+):
     st_session_state_mock.get.return_value = True
 
     main()
@@ -67,7 +80,13 @@ def test_main_logged_in(st_session_state_mock, profile_display_mock, groups_disp
 
     auth_display_mock.assert_not_called()
 
-def test_main_not_logged_in(st_session_state_mock, profile_display_mock, groups_display_mock, auth_display_mock):
+
+def test_main_not_logged_in(
+    st_session_state_mock,
+    profile_display_mock,
+    groups_display_mock,
+    auth_display_mock,
+):
 
     st_session_state_mock.get.return_value = False
 
