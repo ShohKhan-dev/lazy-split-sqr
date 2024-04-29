@@ -48,4 +48,7 @@ jobs:
         run: poetry install
       
       - name: Run tests
-        run: poetry run pytest
+        run: poetry run pytest --cov app/ --cov-branch --cov-report=term --cov-fail-under=85
+
+      - name: Run bandit
+        run: poetry run bandit app
