@@ -134,7 +134,8 @@ class TestGroupAPI:
         group_create_data = {"group_name": "Test Group", "created_by": 1}
         data = create_group(GroupCreate(**group_create_data), db=mock_db)
 
-        assert data['group_name'] == "Test Group"
+        assert data.group_name == "Test Group"
+        assert data.created_by == 1
 
     def test_add_group_member(self, mock_db):
         group = Group(group_id=1, group_name="Test Group", created_by=1, total_members=1)
@@ -182,11 +183,10 @@ class TestExpenseAPI:
         expense_create_data = {"group_id": 1, "description": "Test Expense", "amount": 100, "created_by": 1}
         data = create_expense(ExpenseCreate(**expense_create_data), db=mock_db)
 
-        assert isinstance(data, dict)
-        assert data['group_id'] == expense.group_id
-        assert data['description'] == expense.description
-        assert data['amount'] == expense.amount
-        assert data['created_by'] == expense.created_by
+        assert data.group_id == expense.group_id
+        assert data.description == expense.description
+        assert data.amount == expense.amount
+        assert data.created_by == expense.created_by
 
     def test_delete_expense(self, mock_db):
         expense = Expense(expense_id=1, group_id=1, description="Test Expense", amount=100, created_by=1)
