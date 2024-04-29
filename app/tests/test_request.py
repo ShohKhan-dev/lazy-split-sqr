@@ -28,6 +28,36 @@ test_users = [
 ]
 
 
+class TestAuth(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
+
+        app.dependency_overrides[get_db] = lambda: self.db
+
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
+
+    def test_login_user(self):
+        user = User(username="testuser3", password="testpass3", email="test3@example.com")
+        with TestingSessionLocal() as session:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+        response = client.post(
+            "/auth/login",
+            json={"username": "testuser3", "password": "testpass3"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["status"] == "success"
+        assert data["user_id"] == user.user_id
+        assert data["email"] == user.email
+
+
 class TestUser(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
@@ -248,19 +278,6 @@ class TestExpenses(unittest.TestCase):
             session.commit()
             session.refresh(expense)
             return expense.expense_id
-
-    # def test_create_expense(self):
-    #     group_id = TestExpenses.create_test_group()
-    #     response = client.post(
-    #         "/expenses/",
-    #         json={"group_id": group_id, "description": "Test Expense", "amount": 100, "created_by": 1}
-    #     )
-    #     assert response.status_code == 200
-    #     data = response.json()
-    #     assert data["description"] == "Test Expense"
-    #     assert data["amount"] == 100
-    #     assert data["created_by"] == 1
-    #     assert "expense_id" in data
 
     def test_get_expenses(self):
         response = client.get("/expenses/")

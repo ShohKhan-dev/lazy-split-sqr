@@ -2,6 +2,8 @@ import unittest
 import pytest
 
 from fastapi import HTTPException, status
+
+from app.api.auth import UserLogin, login
 from app.api.users import UserCreate, get_user, create_user, get_user_groups, get_user_expenses
 from app.api.groups import GroupCreate, get_group, create_group, add_group_member
 from app.api.expenses import get_expense, create_expense, delete_expense, create_expense_participant, \
@@ -22,6 +24,48 @@ engine = create_engine(
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+class TestAuthAPI(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
+
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
+
+    def test_login_no_user(self):
+        user_author = UserLogin(username="Test User", password="password")
+        with pytest.raises(HTTPException) as exc_info:
+            login(user_author, db=self.db)
+
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+        assert "Incorrect username or password" in str(exc_info.value.detail)
+
+    def test_login_wrong_password(self):
+        user = User(username="Test User", password="password1", email="test@example.com")
+        self.db.add(user)
+        self.db.commit()
+
+        user_author = UserLogin(username="Test User", password="password")
+        with pytest.raises(HTTPException) as exc_info:
+            login(user_author, db=self.db)
+
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+        assert "Incorrect username or password" in str(exc_info.value.detail)
+
+    def test_login_success(self):
+        user = User(username="Test User", password="password", email="test@example.com")
+        self.db.add(user)
+        self.db.commit()
+
+        user_author = UserLogin(username="Test User", password="password")
+        data = login(user_author, db=self.db)
+
+        assert data["status"] == "success"
+        assert data["user_id"] == user.user_id
+        assert data["email"] == user.email
 
 
 class TestUserAPI(unittest.TestCase):

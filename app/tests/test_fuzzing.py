@@ -27,6 +27,26 @@ email_strategy = st.emails()
 amount_strategy = st.integers(min_value=1, max_value=1000)
 
 
+class TestAuthFuzz(unittest.TestCase):
+    def setUp(self):
+        Base.metadata.create_all(bind=engine)
+        self.db = TestingSessionLocal()
+
+        app.dependency_overrides[get_db] = lambda: self.db
+
+    def tearDown(self):
+        self.db.invalidate()
+        self.db.close()
+
+    @given(username=str_strategy, password=str_strategy)
+    def test_create_user(self, username, password):
+        response = client.post(
+            "/auth/login",
+            json={"username": username, "password": password},
+        )
+        assert response.status_code == 200 or response.status_code == 401
+
+
 class TestUserFuzz(unittest.TestCase):
     def setUp(self):
         Base.metadata.create_all(bind=engine)
@@ -127,4 +147,4 @@ class TestExpenseFuzz(unittest.TestCase):
             f"/expenses/participant/",
             json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid}
         )
-        assert response.status_code == 200 or response.status_code == 422
+        assert response.status_code == 200 or response.status_code == 404

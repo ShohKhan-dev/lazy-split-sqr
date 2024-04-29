@@ -5,14 +5,13 @@ from app.database import get_db
 from pydantic import BaseModel
 from passlib.context import CryptContext
 
-
 router = APIRouter()
-
 
 
 class UserLogin(BaseModel):
     username: str
     password: str
+
 
 @router.post("/login")
 def login(user: UserLogin, db: Session = Depends(get_db)):
@@ -23,4 +22,4 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             detail="Incorrect username or password"
         )
 
-    return {"status":"success", "user_id": db_user.user_id, "email": db_user.email}
+    return {"status": "success", "user_id": db_user.user_id, "email": db_user.email}

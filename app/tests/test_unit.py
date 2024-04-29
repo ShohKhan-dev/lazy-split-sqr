@@ -1,3 +1,4 @@
+from app.api.auth import UserLogin, login
 from app.api.users import UserCreate, get_users, get_user, create_user, get_user_groups, get_user_expenses
 from app.api.groups import GroupCreate, get_groups, get_group, create_group, add_group_member
 from app.api.expenses import get_expenses, get_expense, create_expense, delete_expense, create_expense_participant, \
@@ -5,6 +6,23 @@ from app.api.expenses import get_expenses, get_expense, create_expense, delete_e
 from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
 from unittest.mock import MagicMock
 import pytest
+
+
+class TestAuthAPI:
+    @pytest.fixture
+    def mock_db(self):
+        return MagicMock()
+
+    def test_login(self, mock_db):
+        user = User(user_id=1, username="Test User", email="test@example.com", password="password")
+        mock_db.query().filter().first.return_value = user
+
+        user_auth = UserLogin(username=user.username, password=user.password)
+        data = login(user_auth, db=mock_db)
+
+        assert data['status'] == "success"
+        assert data['user_id'] == user.user_id
+        assert data['email'] == user.email
 
 
 class TestUserAPI:
