@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
 from app.main import app
-import pytest
 from hypothesis import given, strategies as st
 
 client = TestClient(app)
@@ -64,6 +63,7 @@ def test_get_group(group_id):
 def test_add_group_member(group_id, user_id):
     response = client.post(f"/groups/{group_id}/add_member/{user_id}")
     assert response.status_code == 200 or response.status_code == 404
+
 
 @given(group_id=group_id_strategy, description=description_strategy, amount=amount_strategy, created_by=user_id_strategy)
 def test_create_expense(group_id, description, amount, created_by):

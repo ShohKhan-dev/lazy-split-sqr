@@ -60,28 +60,26 @@ class TestUserAPI:
 
     def test_get_user_expenses(self, mock_db):
         mock_user = MagicMock()
-        mock_db.user_id=1
+        mock_db.user_id = 1
         mock_db.query().filter().first.return_value = mock_user
 
-        # Mock expenses and expense details
         mock_expense_participant = MagicMock()
         mock_expense_participant.expense_id = 1
-        mock_expense_participant.participant_info =  "info"   # Mocked expense participant info
+        mock_expense_participant.participant_info = "info"
         mock_db.query().filter().all.return_value = [mock_expense_participant]
-        
+
         mock_expense = MagicMock()
         mock_expense.description = "Test expense"
         mock_expense.amount = 100
         mock_db.query().filter().first.return_value = mock_expense
-        
-        # Call the function with a user_id
+
         expenses_with_details = get_user_expenses(user_id=1, db=mock_db)
-        
-        # Assert that the function returns the expected expenses with details
+
         assert len(expenses_with_details) == 1
         assert expenses_with_details[0]["participant_info"] == "info"
         assert expenses_with_details[0]["expense_description"] == "Test expense"
         assert expenses_with_details[0]["expense_amount"] == 100
+
 
 class TestGroupAPI:
     @pytest.fixture
