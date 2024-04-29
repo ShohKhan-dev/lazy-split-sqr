@@ -1,4 +1,5 @@
 from front.main import delete_expense_fn, pay_expense_fn, BASE_URL
+from mocks import *
 
 
 def test_delete_expense_fn_success(requests_mock, st_success_mock):

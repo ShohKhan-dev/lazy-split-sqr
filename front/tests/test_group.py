@@ -5,6 +5,7 @@ from front.main import (
     a_group_display,
     BASE_URL,
 )
+from mocks import *
 
 
 def test_add_member_success(requests_mock, st_success_mock, get_user_by_username_mock):

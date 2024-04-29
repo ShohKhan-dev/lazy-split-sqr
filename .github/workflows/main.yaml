@@ -28,7 +28,7 @@ jobs:
         run: poetry run black app front
 
       - name: Linting wiht Flake8
-        run: poetry run flake8 app front
+        run: poetry run flake8 --ignore=F403,F401,W503 app front
       
       - name: Run tests
         run: poetry run pytest --cov app/ --cov-branch --cov-report=term --cov-fail-under=85

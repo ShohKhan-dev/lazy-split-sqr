@@ -1,4 +1,5 @@
 from front.main import register, auth_display, main, login
+from mocks import *
 
 
 def test_register_success(requests_mock, st_sidebar_success_mock):

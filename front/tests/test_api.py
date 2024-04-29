@@ -1,3 +1,4 @@
+from mocks import *
 from front.main import (
     get_user_groups,
     get_user_expenses,
