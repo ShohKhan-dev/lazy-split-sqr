@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from app.models import User, Group, GroupMembership, ExpenseParticipant, Expense
+from app.models import (
+    User,
+    Group,
+    GroupMembership,
+    ExpenseParticipant,
+    Expense,
+)
 from app.database import get_db
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -9,6 +15,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 router = APIRouter()
+
 
 class UserCreate(BaseModel):
     username: str
@@ -20,12 +27,14 @@ class UserCreate(BaseModel):
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
+
 @router.get("/username/{username}")
 def get_user_by_username(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 @router.get("/{user_id}")
 def get_user(user_id: int, db: Session = Depends(get_db)):
@@ -38,25 +47,29 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 @router.post("/")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the username or email already exists
-    existing_user = db.query(User).filter(User.username == user.username).first()
+    existing_user = (
+        db.query(User).filter(User.username == user.username).first()
+    )
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already exists"
+            detail="Username already exists",
         )
 
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Email already registered",
         )
 
     # Hash the password before storing it in the database
     # hashed_password = pwd_context.hash(user.password)
 
-    db_user = User(username=user.username, email=user.email, password=user.password)
-    
+    db_user = User(
+        username=user.username, email=user.email, password=user.password
+    )
+
     # Add the user to the database
     db.add(db_user)
     db.commit()
@@ -71,8 +84,13 @@ def get_user_groups(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    groups = db.query(Group).join(Group.groupmembers).filter(GroupMembership.user_id == user_id).all()
+
+    groups = (
+        db.query(Group)
+        .join(Group.groupmembers)
+        .filter(GroupMembership.user_id == user_id)
+        .all()
+    )
     return groups
 
 
@@ -81,16 +99,26 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.user_id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     expenses_with_details = []
-    expense_participants = db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
+    expense_participants = (
+        db.query(ExpenseParticipant)
+        .filter(ExpenseParticipant.user_id == user_id)
+        .all()
+    )
 
     for expense_participant in expense_participants:
-        expense = db.query(Expense).filter(Expense.expense_id == expense_participant.expense_id).first()
+        expense = (
+            db.query(Expense)
+            .filter(Expense.expense_id == expense_participant.expense_id)
+            .first()
+        )
         expense_details = {
             "expense_description": expense.description,
-            "expense_amount": expense.amount
+            "expense_amount": expense.amount,
         }
-        expenses_with_details.append({**expense_participant.__dict__, **expense_details})
-        
+        expenses_with_details.append(
+            {**expense_participant.__dict__, **expense_details}
+        )
+
     return expenses_with_details
