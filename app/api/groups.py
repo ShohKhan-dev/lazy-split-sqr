@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 from app.models import Group, User, GroupMembership
 from app.database import get_db
@@ -52,6 +53,10 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
     group = db.query(Group).filter(Group.group_id == group_id).first()
     if group is None:
         raise HTTPException(status_code=404, detail="Group not found")
+
+    if db.query(GroupMembership).filter(
+            and_(GroupMembership.group_id == group_id, GroupMembership.user_id == user_id)).first():
+        raise HTTPException(status_code=404, detail="Already in group")
 
     # Update total members of the group
     group.total_members += 1
