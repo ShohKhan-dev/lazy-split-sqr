@@ -1,5 +1,12 @@
+from front.main import (
+    add_member,
+    create_expense,
+    create_group,
+    a_group_display,
+    BASE_URL,
+)
 from mocks import *
-from front.main import add_member, create_expense, create_group, a_group_display, BASE_URL
+
 
 def test_add_member_success(requests_mock, st_success_mock, get_user_by_username_mock):
     username = "existing_user"
@@ -11,9 +18,12 @@ def test_add_member_success(requests_mock, st_success_mock, get_user_by_username
 
     add_member(group_id, username)
 
-    requests_mock.post.assert_called_once_with(f"{BASE_URL}/groups/{group_id}/add_member/123")
+    requests_mock.post.assert_called_once_with(
+        f"{BASE_URL}/groups/{group_id}/add_member/123"
+    )
     get_user_by_username_mock.assert_called_once_with(username)
     st_success_mock.assert_called_once_with(f"Added {username} to the group")
+
 
 def test_add_member_user_not_found(st_error_mock, get_user_by_username_mock):
     username = "non_existing_user"
@@ -23,7 +33,10 @@ def test_add_member_user_not_found(st_error_mock, get_user_by_username_mock):
 
     st_error_mock.assert_called_once_with(f"User {username} doesn't exists")
 
-def test_add_member_error_response(requests_mock, st_error_mock, get_user_by_username_mock):
+
+def test_add_member_error_response(
+    requests_mock, st_error_mock, get_user_by_username_mock
+):
     username = "existing_user"
     get_user_by_username_mock.return_value = {"user_id": 123}
 
@@ -48,10 +61,17 @@ def test_create_expense_success(requests_mock, st_success_mock, st_session_state
 
     requests_mock.post.assert_called_once_with(
         f"{BASE_URL}/expenses",
-        json={"group_id": group_id, "created_by": created_by, "amount": amount, "description": description}
+        json={
+            "group_id": group_id,
+            "created_by": created_by,
+            "amount": amount,
+            "description": description,
+        },
     )
 
-    st_success_mock.assert_called_once_with(f"Expense with {amount} roubles by {username} was created")
+    st_success_mock.assert_called_once_with(
+        f"Expense with {amount} roubles by {username} was created"
+    )
 
 
 def test_create_expense_invalid_amount(requests_mock, st_error_mock):
@@ -86,12 +106,12 @@ def test_create_group_success(requests_mock):
 
     # Check if requests.post is called with the correct endpoint and JSON data
     requests_mock.post.assert_called_once_with(
-        f"{BASE_URL}/groups/",
-        json={"group_name": group_name, "created_by": created_by}
+        f"{BASE_URL}/groups/", json={"group_name": group_name, "created_by": created_by}
     )
 
     # Check if the result matches the expected response
     assert result == response_json
+
 
 def test_create_group_error_response(requests_mock):
     group_name = "Test Group"
@@ -100,11 +120,12 @@ def test_create_group_error_response(requests_mock):
 
     create_group(group_name, created_by)
 
-
     requests_mock.post.assert_called_once()
 
 
-def test_a_group_display_members(get_group_mock, st_radio_mock, members_display_mock, expenses_display_mock):
+def test_a_group_display_members(
+    get_group_mock, st_radio_mock, members_display_mock, expenses_display_mock
+):
     group_id = 123
     group_data = {"group_id": group_id, "group_name": "Test Group"}
     get_group_mock.return_value = group_data
@@ -117,7 +138,10 @@ def test_a_group_display_members(get_group_mock, st_radio_mock, members_display_
 
     expenses_display_mock.assert_not_called()
 
-def test_a_group_display_expenses(get_group_mock, st_radio_mock, members_display_mock, expenses_display_mock):
+
+def test_a_group_display_expenses(
+    get_group_mock, st_radio_mock, members_display_mock, expenses_display_mock
+):
     group_id = 123
     group_data = {"group_id": group_id, "group_name": "Test Group"}
     get_group_mock.return_value = group_data

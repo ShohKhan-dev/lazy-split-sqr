@@ -42,14 +42,12 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the username or email already exists
     if db.query(User).filter(User.username == user.username).first():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already exists"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists"
         )
 
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
     # Hash the password before storing it in the database
@@ -71,7 +69,12 @@ def get_user_groups(user_id: int, db: Session = Depends(get_db)):
     if db.query(User).filter(User.user_id == user_id).first() is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    groups = db.query(Group).join(Group.groupmembers).filter(GroupMembership.user_id == user_id).all()
+    groups = (
+        db.query(Group)
+        .join(Group.groupmembers)
+        .filter(GroupMembership.user_id == user_id)
+        .all()
+    )
     return groups
 
 
@@ -81,14 +84,22 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
 
     expenses_with_details = []
-    expense_participants = db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
+    expense_participants = (
+        db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
+    )
 
     for expense_participant in expense_participants:
-        expense = db.query(Expense).filter(Expense.expense_id == expense_participant.expense_id).first()
+        expense = (
+            db.query(Expense)
+            .filter(Expense.expense_id == expense_participant.expense_id)
+            .first()
+        )
         expense_details = {
             "expense_description": expense.description,
-            "expense_amount": expense.amount
+            "expense_amount": expense.amount,
         }
-        expenses_with_details.append({**expense_participant.__dict__, **expense_details})
+        expenses_with_details.append(
+            {**expense_participant.__dict__, **expense_details}
+        )
 
     return expenses_with_details
