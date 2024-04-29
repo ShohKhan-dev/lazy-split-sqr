@@ -1,4 +1,4 @@
-from app.api.users import UserCreate, get_users, get_user, create_user, get_user_groups
+from app.api.users import UserCreate, get_users, get_user, create_user, get_user_groups, get_user_expenses
 from app.api.groups import GroupCreate, get_groups, get_group, create_group, add_group_member
 from app.api.expenses import get_expenses, get_expense, create_expense, delete_expense, create_expense_participant, ExpenseCreate
 from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
@@ -59,8 +59,29 @@ class TestUserAPI:
         assert data[0].total_members == group.total_members
 
     def test_get_user_expenses(self, mock_db):
-        pass
+        mock_user = MagicMock()
+        mock_db.user_id=1
+        mock_db.query().filter().first.return_value = mock_user
 
+        # Mock expenses and expense details
+        mock_expense_participant = MagicMock()
+        mock_expense_participant.expense_id = 1
+        mock_expense_participant.participant_info =  "info"   # Mocked expense participant info
+        mock_db.query().filter().all.return_value = [mock_expense_participant]
+        
+        mock_expense = MagicMock()
+        mock_expense.description = "Test expense"
+        mock_expense.amount = 100
+        mock_db.query().filter().first.return_value = mock_expense
+        
+        # Call the function with a user_id
+        expenses_with_details = get_user_expenses(user_id=1, db=mock_db)
+        
+        # Assert that the function returns the expected expenses with details
+        assert len(expenses_with_details) == 1
+        assert expenses_with_details[0]["participant_info"] == "info"
+        assert expenses_with_details[0]["expense_description"] == "Test expense"
+        assert expenses_with_details[0]["expense_amount"] == 100
 
 class TestGroupAPI:
     @pytest.fixture
