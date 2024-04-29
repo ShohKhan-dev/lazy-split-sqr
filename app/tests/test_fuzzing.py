@@ -144,7 +144,7 @@ class TestExpenseFuzz(unittest.TestCase):
     @given(expense_id=id_strategy, user_id=id_strategy, amount_paid=amount_strategy)
     def test_create_expense_participant(self, expense_id, user_id, amount_paid):
         response = client.post(
-            f"/expenses/participant/",
+            "/expenses/participant/",
             json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid}
         )
         assert response.status_code == 200 or response.status_code == 404

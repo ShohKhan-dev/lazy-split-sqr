@@ -314,7 +314,7 @@ class TestExpenses(unittest.TestCase):
         TestExpenses.create_test_group(user_id)
         expense_id = TestExpenses.create_test_expense()
         response = client.post(
-            f"/expenses/participant/",
+            "/expenses/participant/",
             json={"expense_id": expense_id, "user_id": user_id, "amount_paid": 50}
         )
         assert response.status_code == 200

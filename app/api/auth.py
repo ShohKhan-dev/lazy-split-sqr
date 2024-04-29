@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from app.models import User
 from app.database import get_db
 from pydantic import BaseModel
-from passlib.context import CryptContext
 
 router = APIRouter()
 
