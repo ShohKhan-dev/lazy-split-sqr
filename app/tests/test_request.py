@@ -233,11 +233,15 @@ class TestExpenses:
     #     assert "expense_id" in data
 
     def test_get_expenses(self):
+        response = client.get("/expenses/")
+        assert response.status_code == 200
+        cur = len(response.json())
+
         TestExpenses.create_test_expense()
         response = client.get("/expenses/")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
+        assert len(data) == cur + 1
 
     def test_get_expense(self):
         expense_id = TestExpenses.create_test_expense()
