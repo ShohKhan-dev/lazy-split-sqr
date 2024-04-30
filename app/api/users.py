@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from app.models import User, Group, GroupMembership, ExpenseParticipant, Expense
+from app.models import (
+    User,
+    Group,
+    GroupMembership,
+    ExpenseParticipant,
+    Expense,
+)
 from app.database import get_db
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -42,12 +48,14 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     # Check if the username or email already exists
     if db.query(User).filter(User.username == user.username).first():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
         )
 
     if db.query(User).filter(User.email == user.email).first():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
         )
 
     # Hash the password before storing it in the database
@@ -85,7 +93,9 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
 
     expenses_with_details = []
     expense_participants = (
-        db.query(ExpenseParticipant).filter(ExpenseParticipant.user_id == user_id).all()
+        db.query(ExpenseParticipant)
+        .filter(ExpenseParticipant.user_id == user_id)
+        .all()
     )
 
     for expense_participant in expense_participants:

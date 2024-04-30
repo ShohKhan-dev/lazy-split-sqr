@@ -21,4 +21,8 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
             detail="Incorrect username or password",
         )
 
-    return {"status": "success", "user_id": db_user.user_id, "email": db_user.email}
+    return {
+        "status": "success",
+        "user_id": db_user.user_id,
+        "email": db_user.email,
+    }

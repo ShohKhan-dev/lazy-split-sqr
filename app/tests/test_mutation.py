@@ -11,7 +11,12 @@ from app.api.users import (
     get_user_groups,
     get_user_expenses,
 )
-from app.api.groups import GroupCreate, get_group, create_group, add_group_member
+from app.api.groups import (
+    GroupCreate,
+    get_group,
+    create_group,
+    add_group_member,
+)
 from app.api.expenses import (
     get_expense,
     create_expense,
@@ -20,7 +25,13 @@ from app.api.expenses import (
     ExpenseCreate,
     CreateExpenseParticipant,
 )
-from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
+from app.models import (
+    User,
+    Group,
+    GroupMembership,
+    Expense,
+    ExpenseParticipant,
+)
 from sqlalchemy import create_engine, StaticPool
 
 from sqlalchemy.orm import sessionmaker
@@ -35,7 +46,9 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine
+)
 
 
 class TestAuthAPI(unittest.TestCase):
@@ -57,7 +70,9 @@ class TestAuthAPI(unittest.TestCase):
 
     def test_login_wrong_password(self):
         user = User(
-            username="Test User", password="password1", email="test@example.com"
+            username="Test User",
+            password="password1",
+            email="test@example.com",
         )
         self.db.add(user)
         self.db.commit()
@@ -70,7 +85,9 @@ class TestAuthAPI(unittest.TestCase):
         assert "Incorrect username or password" in str(exc_info.value.detail)
 
     def test_login_success(self):
-        user = User(username="Test User", password="password", email="test@example.com")
+        user = User(
+            username="Test User", password="password", email="test@example.com"
+        )
         self.db.add(user)
         self.db.commit()
 
@@ -100,7 +117,9 @@ class TestUserAPI(unittest.TestCase):
 
     def test_get_user_success(self):
         user = User(
-            username="testuser1", password="testpass1", email="test1@example.com"
+            username="testuser1",
+            password="testpass1",
+            email="test1@example.com",
         )
         self.db.add(user)
         self.db.commit()
@@ -114,14 +133,18 @@ class TestUserAPI(unittest.TestCase):
 
     def test_create_user_exist_username(self):
         user = User(
-            username="testuser1", password="testpass1", email="test1@example.com"
+            username="testuser1",
+            password="testpass1",
+            email="test1@example.com",
         )
         self.db.add(user)
         self.db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             user_create = UserCreate(
-                username="testuser1", email="new@example.com", password="password"
+                username="testuser1",
+                email="new@example.com",
+                password="password",
             )
             create_user(user_create, db=self.db)
 
@@ -130,14 +153,18 @@ class TestUserAPI(unittest.TestCase):
 
     def test_create_user_exist_email(self):
         user = User(
-            username="testuser1", password="testpass1", email="test1@example.com"
+            username="testuser1",
+            password="testpass1",
+            email="test1@example.com",
         )
         self.db.add(user)
         self.db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
             user_create = UserCreate(
-                username="new_user", email="test1@example.com", password="password"
+                username="new_user",
+                email="test1@example.com",
+                password="password",
             )
             create_user(user_create, db=self.db)
 
@@ -197,7 +224,9 @@ class TestUserAPI(unittest.TestCase):
             email="test@example.com",
             password="password",
         )
-        group_membership = GroupMembership(group_id=1, user_id=1, is_admin=False)
+        group_membership = GroupMembership(
+            group_id=1, user_id=1, is_admin=False
+        )
         self.db.add_all([group, user, group_membership])
         self.db.commit()
 
@@ -220,7 +249,9 @@ class TestUserAPI(unittest.TestCase):
             amount_paid=100,
             amount_owed=1000,
         )
-        expense = Expense(expense_id=1, group_id=1, amount=110, description="desc")
+        expense = Expense(
+            expense_id=1, group_id=1, amount=110, description="desc"
+        )
         user = User(
             user_id=1,
             username="Test User",
@@ -342,7 +373,9 @@ class TestGroupAPI(unittest.TestCase):
             email="test@example.com",
             password="password",
         )
-        group_membership = GroupMembership(group_id=1, user_id=1, is_admin=False)
+        group_membership = GroupMembership(
+            group_id=1, user_id=1, is_admin=False
+        )
         self.db.add_all([group, user, group_membership])
         self.db.commit()
 
@@ -400,7 +433,9 @@ class TestExpenseAPI(unittest.TestCase):
         assert "Expense not found" in str(exc_info.value.detail)
 
     def test_get_expense_success(self):
-        expense = Expense(expense_id=1, group_id=1, amount=110, description="desc")
+        expense = Expense(
+            expense_id=1, group_id=1, amount=110, description="desc"
+        )
         self.db.add(expense)
         self.db.commit()
 
@@ -426,7 +461,9 @@ class TestExpenseAPI(unittest.TestCase):
         assert "User not in Group" in str(exc_info.value.detail)
 
     def test_create_expense_no_group(self):
-        group_membership = GroupMembership(group_id=1, user_id=1, is_admin=False)
+        group_membership = GroupMembership(
+            group_id=1, user_id=1, is_admin=False
+        )
         self.db.add(group_membership)
         self.db.commit()
 
@@ -443,7 +480,9 @@ class TestExpenseAPI(unittest.TestCase):
         assert "Group not found" in str(exc_info.value.detail)
 
     def test_create_expense_success(self):
-        group_membership = GroupMembership(group_id=1, user_id=1, is_admin=False)
+        group_membership = GroupMembership(
+            group_id=1, user_id=1, is_admin=False
+        )
         group = Group(
             group_id=1, group_name="Test Group", created_by=1, total_members=1
         )
@@ -495,7 +534,9 @@ class TestExpenseAPI(unittest.TestCase):
             total_members=1,
             total_expenses=100,
         )
-        expense = Expense(expense_id=1, group_id=1, amount=100, description="desc")
+        expense = Expense(
+            expense_id=1, group_id=1, amount=100, description="desc"
+        )
         self.db.add_all([expense_participant, group, expense])
         self.db.commit()
 
@@ -518,7 +559,11 @@ class TestExpenseAPI(unittest.TestCase):
         self.db.commit()
 
         with pytest.raises(HTTPException) as exc_info:
-            expense_create_data = {"expense_id": 1, "user_id": 1, "amount_paid": 100}
+            expense_create_data = {
+                "expense_id": 1,
+                "user_id": 1,
+                "amount_paid": 100,
+            }
             create_expense_participant(
                 CreateExpenseParticipant(**expense_create_data), db=self.db
             )
@@ -527,7 +572,9 @@ class TestExpenseAPI(unittest.TestCase):
         assert "Expense not found" in str(exc_info.value.detail)
 
     def test_create_expense_participant_success(self):
-        expense = Expense(expense_id=1, group_id=1, amount=100, description="desc")
+        expense = Expense(
+            expense_id=1, group_id=1, amount=100, description="desc"
+        )
         group = Group(
             group_id=1, group_name="Test Group", created_by=1, total_members=2
         )
@@ -549,5 +596,7 @@ class TestExpenseAPI(unittest.TestCase):
 
         assert expense_participant.expense_id == expense_create_data.expense_id
         assert expense_participant.user_id == expense_create_data.user_id
-        assert expense_participant.amount_paid == expense_create_data.amount_paid
+        assert (
+            expense_participant.amount_paid == expense_create_data.amount_paid
+        )
         assert expense_participant.amount_owed == 50

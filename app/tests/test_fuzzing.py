@@ -18,7 +18,9 @@ engine = create_engine(
     poolclass=StaticPool,
 )
 
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine
+)
 
 # Strategies for generating test data
 id_strategy = st.integers(min_value=1, max_value=500)
@@ -151,8 +153,14 @@ class TestExpenseFuzz(unittest.TestCase):
         response = client.delete(f"/expenses/{expense_id}")
         assert response.status_code == 200 or response.status_code == 404
 
-    @given(expense_id=id_strategy, user_id=id_strategy, amount_paid=amount_strategy)
-    def test_create_expense_participant(self, expense_id, user_id, amount_paid):
+    @given(
+        expense_id=id_strategy,
+        user_id=id_strategy,
+        amount_paid=amount_strategy,
+    )
+    def test_create_expense_participant(
+        self, expense_id, user_id, amount_paid
+    ):
         response = client.post(
             "/expenses/participant/",
             json={

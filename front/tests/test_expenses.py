@@ -8,7 +8,9 @@ def test_delete_expense_fn_success(requests_mock, st_success_mock):
 
     result = delete_expense_fn(expense_id)()
 
-    requests_mock.delete.assert_called_once_with(f"{BASE_URL}/expenses/{expense_id}")
+    requests_mock.delete.assert_called_once_with(
+        f"{BASE_URL}/expenses/{expense_id}"
+    )
 
     st_success_mock.assert_called_once_with("Deleted successfully")
 
@@ -21,7 +23,9 @@ def test_delete_expense_fn_error(requests_mock, st_error_mock):
 
     result = delete_expense_fn(expense_id)()
 
-    requests_mock.delete.assert_called_once_with(f"{BASE_URL}/expenses/{expense_id}")
+    requests_mock.delete.assert_called_once_with(
+        f"{BASE_URL}/expenses/{expense_id}"
+    )
 
     st_error_mock.assert_called_once_with("Couldn't delete expense")
 
@@ -38,7 +42,11 @@ def test_pay_expense_fn_success(requests_mock, st_success_mock):
 
     requests_mock.post.assert_called_once_with(
         f"{BASE_URL}/expenses/participant",
-        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid},
+        json={
+            "expense_id": expense_id,
+            "user_id": user_id,
+            "amount_paid": amount_paid,
+        },
     )
 
     st_success_mock.assert_called_once_with("Paid successfully")
@@ -57,7 +65,11 @@ def test_pay_expense_fn_error(requests_mock, st_error_mock):
 
     requests_mock.post.assert_called_once_with(
         f"{BASE_URL}/expenses/participant",
-        json={"expense_id": expense_id, "user_id": user_id, "amount_paid": amount_paid},
+        json={
+            "expense_id": expense_id,
+            "user_id": user_id,
+            "amount_paid": amount_paid,
+        },
     )
 
     st_error_mock.assert_called_once_with("Couldn't pay expense")

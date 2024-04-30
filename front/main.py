@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import math
 
 # Base URL for the FastAPI server
 BASE_URL = "http://localhost:8000"
@@ -8,7 +9,8 @@ BASE_URL = "http://localhost:8000"
 def register(email, username, password):
     endpoint = f"{BASE_URL}/users"
     response = requests.post(
-        endpoint, json={"email": email, "username": username, "password": password}
+        endpoint,
+        json={"email": email, "username": username, "password": password},
     )
     if response.status_code == 200:
         st.sidebar.success("Registered successfully")
@@ -69,6 +71,18 @@ def get_group(group_id):
     return response.json()
 
 
+def get_group_depts(group_id):
+    endpoint = f"{BASE_URL}/dept/{group_id}"
+    response = requests.get(endpoint)
+    return response.json()
+
+
+def get_user_depts(group_id, user_id):
+    endpoint = f"{BASE_URL}/dept/{group_id}/{user_id}"
+    response = requests.get(endpoint)
+    return response.json()
+
+
 def add_member(group_id, username):
     user = get_user_by_username(username)
     if "user_id" not in user:
@@ -115,10 +129,14 @@ def profile_display():
 def members_display(group):
     st.subheader(f"Total Members: {group['total_members']}")
     username_to_add = st.text_input("Add member", placeholder="username")
-    st.button("Add", on_click=lambda: add_member(group["group_id"], username_to_add))
+    st.button(
+        "Add", on_click=lambda: add_member(group["group_id"], username_to_add)
+    )
     st.write("<br>", unsafe_allow_html=True)
     st.subheader("Members")
-    members = [get_user(m["user_id"])["username"] for m in group["groupmembers"]]
+    members = [
+        get_user(m["user_id"])["username"] for m in group["groupmembers"]
+    ]
     ul_markdown = "\n".join([f"- {item}" for item in members])
     st.write(ul_markdown, unsafe_allow_html=True)
 
@@ -144,6 +162,25 @@ def pay_expense_fn(expense_id, user_id, amount_paid):
     return callback
 
 
+def pay_dept_fn(amount_paid, dept):
+    def callback():
+        endpoint = f"{BASE_URL}/dept/{dept['dept_id']}"
+        response = requests.patch(
+            endpoint,
+            json={
+                "amount": amount_paid,
+            },
+        )
+        if response.status_code != 200:
+            st.error("FAIL")
+            return {}
+
+        st.success("OK")
+        return {}
+
+    return callback
+
+
 def delete_expense_fn(expense_id):
     def x():
         endpoint = f"{BASE_URL}/expenses/{expense_id}"
@@ -156,6 +193,26 @@ def delete_expense_fn(expense_id):
         return {}
 
     return x
+
+
+def delete_dept_fn(dept):
+    def x():
+        endpoint = f"{BASE_URL}/dept/{dept['dept_id']}"
+        response = requests.delete(endpoint)
+        if response.status_code != 200:
+            st.error("Couldn't delete dept")
+            return {}
+
+        st.success("Deleted successfully")
+        return {}
+
+    return x
+
+
+def name_columns(columns, column_names):
+    for i in range(len(column_names)):
+        with columns[i]:
+            st.text(column_names[i])
 
 
 def expenses_display(group):
@@ -171,29 +228,18 @@ def expenses_display(group):
     )
     st.write("<br>", unsafe_allow_html=True)
     st.subheader("Expenses")
+    name_columns(
+        st.columns([0.15, 0.7, 0.15]),
+        ["amount", "description", "delete"],
+    )
     for e in group["groupexpenses"]:
         st.write("<hr style='margin: 0;'>", unsafe_allow_html=True)
-        amount_col, desc_col, pay_col, del_col = st.columns([0.1, 0.5, 0.3, 0.15])
+        amount_col, desc_col, del_col = st.columns([0.15, 0.7, 0.15])
         with amount_col:
             st.markdown(f"**{e['amount']}₽**")
 
         with desc_col:
             st.text(e["description"])
-
-        with pay_col:
-            input_col, btn_col = st.columns(2)
-            with input_col:
-                amount_paid = st.number_input(
-                    "Amount (₽)", step=1, key=e["expense_id"], placeholder="₽"
-                )
-            with btn_col:
-                st.button(
-                    "Pay",
-                    key=f"pay_btn_expense_{e['expense_id']}",
-                    on_click=pay_expense_fn(
-                        e["expense_id"], st.session_state.user_id, amount_paid
-                    ),
-                )
 
         with del_col:
             st.button(
@@ -203,13 +249,56 @@ def expenses_display(group):
             )
 
 
+def depts_display(group):
+    st.subheader("Depts")
+
+    depts = get_group_depts(group["group_id"])
+
+    name_columns(
+        st.columns([0.15, 0.25, 0.25, 0.35]),
+        ["amount", "debtor", "lender", "payment"],
+    )
+    for dept in depts:
+        st.write("<hr style='margin: 0;'>", unsafe_allow_html=True)
+        amount_col, user_col, lender_col, pay_col = st.columns(
+            [0.15, 0.25, 0.25, 0.35]
+        )
+
+        with amount_col:
+            st.markdown(f"**{math.ceil(dept['amount'])}₽**")
+
+        with user_col:
+            user = get_user(dept["user_id"])
+            st.text(user["username"])
+
+        with lender_col:
+            lender = get_user(dept["lender_id"])
+            st.text(lender["username"])
+
+        with pay_col:
+            input_col, btn_col = st.columns(2)
+            with input_col:
+                amount_paid = st.number_input(
+                    "Amount (₽)",
+                    step=1,
+                    key=f"user_{dept['user_id']}_lender_{dept['lender_id']}",
+                    placeholder="₽",
+                )
+            with btn_col:
+                st.button(
+                    "Pay",
+                    key=f"pay_btn_expense_user_{dept['user_id']}_lender_{dept['lender_id']}",
+                    on_click=pay_dept_fn(amount_paid, dept),
+                )
+
+
 def a_group_display(group):
     group = get_group(group["group_id"])
     st.title(group["group_name"])
 
     mode = st.radio(
         "Group Navigation",
-        ("Members", "Expenses"),
+        ("Members", "Expenses", "Depts"),
         horizontal=True,
         label_visibility="collapsed",
     )
@@ -218,6 +307,8 @@ def a_group_display(group):
         members_display(group)
     if mode == "Expenses":
         expenses_display(group)
+    if mode == "Depts":
+        depts_display(group)
 
 
 def groups_display():
@@ -251,7 +342,10 @@ def auth_display():
     st.subheader("Please login to use the app")
 
     mode = st.sidebar.radio(
-        "Auth Form", ("Login", "Register"), horizontal=True, label_visibility="hidden"
+        "Auth Form",
+        ("Login", "Register"),
+        horizontal=True,
+        label_visibility="hidden",
     )
     if mode == "Register":
         st.sidebar.title("Registration")

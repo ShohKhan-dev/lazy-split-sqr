@@ -14,7 +14,9 @@ def test_register_success(requests_mock, st_sidebar_success_mock):
 
 def test_register_failure(requests_mock, st_sidebar_error_mock):
     requests_mock.post.return_value.status_code = 400
-    requests_mock.post.return_value.json.return_value = {"error": "Invalid request"}
+    requests_mock.post.return_value.json.return_value = {
+        "error": "Invalid request"
+    }
 
     register("test@example.com", "test_user", "password")
 
@@ -63,7 +65,10 @@ def test_auth_display_login(st_sidebar_radio_mock, st_sidebar_title_mock):
 
 
 def test_main_logged_in(
-    st_session_state_mock, profile_display_mock, groups_display_mock, auth_display_mock
+    st_session_state_mock,
+    profile_display_mock,
+    groups_display_mock,
+    auth_display_mock,
 ):
     st_session_state_mock.get.return_value = True
 
@@ -77,7 +82,10 @@ def test_main_logged_in(
 
 
 def test_main_not_logged_in(
-    st_session_state_mock, profile_display_mock, groups_display_mock, auth_display_mock
+    st_session_state_mock,
+    profile_display_mock,
+    groups_display_mock,
+    auth_display_mock,
 ):
 
     st_session_state_mock.get.return_value = False
