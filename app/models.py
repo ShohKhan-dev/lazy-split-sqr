@@ -65,6 +65,7 @@ class ExpenseParticipant(Base):
     amount_owed = Column(Float)
     expense = relationship("Expense", back_populates="expense_participants")
 
+
 class Dept(Base):
     __tablename__ = "dept"
 

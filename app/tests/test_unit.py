@@ -23,7 +23,14 @@ from app.api.expenses import (
     ExpenseCreate,
     CreateExpenseParticipant,
 )
-from app.models import User, Group, GroupMembership, Expense, ExpenseParticipant
+from app.api.dept import (
+    list_group_depts,
+    list_user_depts,
+    delete_dept,
+    update_dept_amount,
+    DeptPaid,
+)
+from app.models import Dept, User, Group, GroupMembership, Expense, ExpenseParticipant
 from unittest.mock import MagicMock
 import pytest
 
@@ -315,3 +322,79 @@ class TestExpenseAPI:
         assert data.user_id == expense.created_by
         assert data.amount_paid == 100
         assert data.amount_owed == 0
+
+
+class TestDeptAPI:
+    @pytest.fixture
+    def mock_db(self):
+        return MagicMock()
+
+    def test_list_group_depts(self, mock_db):
+        dept_instance = Dept(
+            dept_id=1,
+            user_id=1,
+            lender_id=2,
+            group_id=1,
+            amount=100,
+        )
+
+        mock_db.query.return_value.filter.return_value.all.return_value = [dept_instance]
+        data = list_group_depts(group_id=1, db=mock_db)
+
+        assert isinstance(data[0], Dept)
+        assert data[0].group_id == 1
+        assert data[0].user_id == 1
+        assert data[0].lender_id == 2
+        assert data[0].amount == 100
+        assert data[0].dept_id == 1
+
+    def test_list_user_depts(self, mock_db):
+        dept_instance = Dept(
+            dept_id=1,
+            user_id=1,
+            lender_id=2,
+            group_id=1,
+            amount=100,
+        )
+
+        mock_db.query.return_value.filter.return_value.all.return_value = [dept_instance]
+
+        result = list_user_depts(group_id=1, user_id=1, db=mock_db)
+
+        assert isinstance(result[0], Dept)
+        assert result[0].dept_id == 1
+        assert result[0].user_id == 1
+        assert result[0].lender_id == 2
+        assert result[0].group_id == 1
+        assert result[0].amount == 100
+
+    def test_delete_dept(self, mock_db):
+        depts = Dept(
+            dept_id=1,
+            user_id=1,
+            lender_id=2,
+            group_id=1,
+            amount=100,
+        )
+        mock_db.query().filter().first.side_effect = [depts]
+
+        data = delete_dept(dept_id=1, db=mock_db)
+
+        assert data == {"message": "Dept deleted successfully"}
+
+    def test_update_dept_amount(self, mock_db):
+        dept = MagicMock(spec=Dept)
+        dept.dept_id = 1
+        dept.user_id = 1
+        dept.lender_id = 2
+        dept.group_id = 1
+        dept.amount = 100
+
+        update = DeptPaid(amount=50)
+
+        mock_db.query.return_value.filter.return_value.first.return_value = dept
+
+        response = update_dept_amount(dept_id=1, dept_paid=update, db=mock_db)
+
+        assert dept.amount == 50
+        assert response == {"message": "Dept updated successfully, amount left: 50"}

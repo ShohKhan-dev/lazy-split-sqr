@@ -18,6 +18,7 @@ class CreateExpenseParticipant(BaseModel):
     user_id: int
     amount_paid: int
 
+
 class CreateDept(BaseModel):
     user_id: int
     lender_id: int
@@ -86,13 +87,24 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
     # Update dept of group members
     mean_value = expense.amount / group.total_members
 
-    members = db.query(GroupMembership.user_id).filter(GroupMembership.group_id == db_expense.group_id).all()
+    members = (
+        db.query(GroupMembership.user_id)
+        .filter(GroupMembership.group_id == db_expense.group_id)
+        .all()
+    )
     member_ids = [m.user_id for m in members]
 
-    depts = db.query(Dept).filter(
-        Dept.group_id == db_expense.group_id,
-        or_(Dept.lender_id == db_expense.created_by, Dept.user_id == db_expense.created_by)
-    ).all()
+    depts = (
+        db.query(Dept)
+        .filter(
+            Dept.group_id == db_expense.group_id,
+            or_(
+                Dept.lender_id == db_expense.created_by,
+                Dept.user_id == db_expense.created_by,
+            ),
+        )
+        .all()
+    )
 
     dept_index = {(d.lender_id, d.user_id): d for d in depts}
 
@@ -113,16 +125,24 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
             if dept_index[key_to_payer].amount > mean_value:
                 dept_index[key_to_payer].amount -= mean_value
             elif mean_value - dept_index[key_to_payer].amount >= 0.01:
-                new_dept = Dept(user_id=member_id, lender_id=db_expense.created_by, group_id=db_expense.group_id,
-                                amount=mean_value - dept_index[key_to_payer].amount)
+                new_dept = Dept(
+                    user_id=member_id,
+                    lender_id=db_expense.created_by,
+                    group_id=db_expense.group_id,
+                    amount=mean_value - dept_index[key_to_payer].amount,
+                )
                 db.add(new_dept)
                 db.delete(dept_index[key_to_payer])
             else:
                 db.delete(dept_index[key_to_payer])
 
         if not flag:
-            new_dept = Dept(user_id=member_id, lender_id=db_expense.created_by, group_id=db_expense.group_id,
-                            amount=mean_value)
+            new_dept = Dept(
+                user_id=member_id,
+                lender_id=db_expense.created_by,
+                group_id=db_expense.group_id,
+                amount=mean_value,
+            )
             db.add(new_dept)
 
     db.commit()
@@ -147,13 +167,23 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     # Update dept of group members
     mean_value = expense.amount / group.total_members
 
-    members = db.query(GroupMembership.user_id).filter(GroupMembership.group_id == expense.group_id).all()
+    members = (
+        db.query(GroupMembership.user_id)
+        .filter(GroupMembership.group_id == expense.group_id)
+        .all()
+    )
     member_ids = [m.user_id for m in members]
 
-    depts = db.query(Dept).filter(
-        Dept.group_id == expense.group_id,
-        or_(Dept.lender_id == expense.created_by, Dept.user_id == expense.created_by)
-    ).all()
+    depts = (
+        db.query(Dept)
+        .filter(
+            Dept.group_id == expense.group_id,
+            or_(
+                Dept.lender_id == expense.created_by, Dept.user_id == expense.created_by
+            ),
+        )
+        .all()
+    )
 
     dept_index = {(d.lender_id, d.user_id): d for d in depts}
 
@@ -171,7 +201,12 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
             if dept_index[key_by_payer].amount > mean_value:
                 dept_index[key_by_payer].amount -= mean_value
             elif mean_value - dept_index[key_by_payer].amount >= 0.01:
-                new_dept = Dept(user_id=expense.created_by, lender_id=member_id, group_id=expense.group_id, amount=mean_value - dept_index[key_by_payer].amount)
+                new_dept = Dept(
+                    user_id=expense.created_by,
+                    lender_id=member_id,
+                    group_id=expense.group_id,
+                    amount=mean_value - dept_index[key_by_payer].amount,
+                )
                 db.add(new_dept)
                 db.delete(dept_index[key_by_payer])
             else:

@@ -171,6 +171,7 @@ def pay_dept_fn(amount_paid, dept):
 
         st.success("OK")
         return {}
+
     return callback
 
 
@@ -221,7 +222,10 @@ def expenses_display(group):
     )
     st.write("<br>", unsafe_allow_html=True)
     st.subheader("Expenses")
-    name_columns(st.columns([0.1, 0.5, 0.3, 0.15]), ["amount", "description", "payment", "delete"])
+    name_columns(
+        st.columns([0.1, 0.5, 0.3, 0.15]),
+        ["amount", "description", "payment", "delete"],
+    )
     for e in group["groupexpenses"]:
         st.write("<hr style='margin: 0;'>", unsafe_allow_html=True)
         amount_col, desc_col, pay_col, del_col = st.columns([0.1, 0.5, 0.3, 0.15])
@@ -253,15 +257,21 @@ def expenses_display(group):
                 on_click=delete_expense_fn(e["expense_id"]),
             )
 
+
 def depts_display(group):
     st.subheader("Depts")
 
     depts = get_group_depts(group["group_id"])
 
-    name_columns(st.columns([0.1, 0.25, 0.25, 0.3, 0.15]), ["amount", "debtor", "lender", "payment", "delete"])
+    name_columns(
+        st.columns([0.1, 0.25, 0.25, 0.3, 0.15]),
+        ["amount", "debtor", "lender", "payment", "delete"],
+    )
     for dept in depts:
         st.write("<hr style='margin: 0;'>", unsafe_allow_html=True)
-        amount_col, user_col, lender_col, pay_col, del_col = st.columns([0.1, 0.25, 0.25, 0.3, 0.15])
+        amount_col, user_col, lender_col, pay_col, del_col = st.columns(
+            [0.1, 0.25, 0.25, 0.3, 0.15]
+        )
 
         with amount_col:
             st.markdown(f"**{dept["amount"]}₽**")
@@ -278,15 +288,16 @@ def depts_display(group):
             input_col, btn_col = st.columns(2)
             with input_col:
                 amount_paid = st.number_input(
-                    "Amount (₽)", step=1, key=f"user_{dept["user_id"]}_lender_{dept["lender_id"]}", placeholder="₽"
+                    "Amount (₽)",
+                    step=1,
+                    key=f"user_{dept["user_id"]}_lender_{dept["lender_id"]}",
+                    placeholder="₽",
                 )
             with btn_col:
                 st.button(
                     "Pay",
                     key=f"pay_btn_expense_user_{dept["user_id"]}_lender_{dept["lender_id"]}",
-                    on_click=pay_dept_fn(
-                        amount_paid, dept
-                    ),
+                    on_click=pay_dept_fn(amount_paid, dept),
                 )
 
         with del_col:
