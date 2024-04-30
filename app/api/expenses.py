@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, joinedload
-from app.models import Group, Expense, ExpenseParticipant, GroupMembership
+from app.models import Dept, Group, Expense, ExpenseParticipant, GroupMembership
 from app.database import get_db
 from pydantic import BaseModel
 
@@ -17,6 +17,12 @@ class CreateExpenseParticipant(BaseModel):
     expense_id: int
     user_id: int
     amount_paid: int
+
+class CreateDept(BaseModel):
+    user_id: int
+    lender_id: int
+    group_id: int
+    amount: float
 
 
 router = APIRouter()
@@ -77,6 +83,50 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
         "created_at": db_expense.created_at,
     }
 
+    # Update dept of group members
+    mean_value = expense.amount / group.total_members
+
+    members = db.query(GroupMembership.user_id).filter(GroupMembership.group_id == db_expense.group_id).all()
+    member_ids = [m.user_id for m in members]
+
+    depts = db.query(Dept).filter(
+        Dept.group_id == db_expense.group_id,
+        or_(Dept.lender_id == db_expense.created_by, Dept.user_id == db_expense.created_by)
+    ).all()
+
+    dept_index = {(d.lender_id, d.user_id): d for d in depts}
+
+    for member_id in member_ids:
+        if member_id == db_expense.created_by:
+            continue
+
+        key_by_payer = (db_expense.created_by, member_id)
+        key_to_payer = (member_id, db_expense.created_by)
+
+        flag = False
+        if key_by_payer in dept_index:
+            dept_index[key_by_payer].amount += mean_value
+            flag = True
+
+        if key_to_payer in dept_index:
+            flag = True
+            if dept_index[key_to_payer].amount > mean_value:
+                dept_index[key_to_payer].amount -= mean_value
+            elif mean_value - dept_index[key_to_payer].amount >= 0.01:
+                new_dept = Dept(user_id=member_id, lender_id=db_expense.created_by, group_id=db_expense.group_id,
+                                amount=mean_value - dept_index[key_to_payer].amount)
+                db.add(new_dept)
+                db.delete(dept_index[key_to_payer])
+            else:
+                db.delete(dept_index[key_to_payer])
+
+        if not flag:
+            new_dept = Dept(user_id=member_id, lender_id=db_expense.created_by, group_id=db_expense.group_id,
+                            amount=mean_value)
+            db.add(new_dept)
+
+    db.commit()
+
     return expense_data
 
 
@@ -94,9 +144,44 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     group.total_expenses -= expense.amount
     db.commit()
 
+    # Update dept of group members
+    mean_value = expense.amount / group.total_members
+
+    members = db.query(GroupMembership.user_id).filter(GroupMembership.group_id == expense.group_id).all()
+    member_ids = [m.user_id for m in members]
+
+    depts = db.query(Dept).filter(
+        Dept.group_id == expense.group_id,
+        or_(Dept.lender_id == expense.created_by, Dept.user_id == expense.created_by)
+    ).all()
+
+    dept_index = {(d.lender_id, d.user_id): d for d in depts}
+
+    for member_id in member_ids:
+        if member_id == expense.created_by:
+            continue
+
+        key_by_payer = (expense.created_by, member_id)
+        key_to_payer = (member_id, expense.created_by)
+
+        if key_to_payer in dept_index:
+            dept_index[key_to_payer].amount += mean_value
+
+        if key_by_payer in dept_index:
+            if dept_index[key_by_payer].amount > mean_value:
+                dept_index[key_by_payer].amount -= mean_value
+            elif mean_value - dept_index[key_by_payer].amount >= 0.01:
+                new_dept = Dept(user_id=expense.created_by, lender_id=member_id, group_id=expense.group_id, amount=mean_value - dept_index[key_by_payer].amount)
+                db.add(new_dept)
+                db.delete(dept_index[key_by_payer])
+            else:
+                db.delete(dept_index[key_by_payer])
+
+    db.commit()
+
     expense_participants = (
         db.query(ExpenseParticipant)
-        .filter(ExpenseParticipant.expense_id == expense.expense_id)
+        .filter(ExpenseParticipant.expense_id == expense.group_id)
         .all()
     )
 

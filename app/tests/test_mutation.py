@@ -463,7 +463,7 @@ class TestExpenseAPI(unittest.TestCase):
 
         expense = self.db.query(Expense).first()
 
-        assert expense.expense_id == 1
+        assert expense.group_id == 1
         assert expense.group_id == expense_create_data.group_id
         assert expense.created_by == expense_create_data.created_by
         assert expense.description == expense_create_data.description
@@ -547,7 +547,7 @@ class TestExpenseAPI(unittest.TestCase):
 
         expense_participant = self.db.query(ExpenseParticipant).first()
 
-        assert expense_participant.expense_id == expense_create_data.expense_id
+        assert expense_participant.group_id == expense_create_data.expense_id
         assert expense_participant.user_id == expense_create_data.user_id
         assert expense_participant.amount_paid == expense_create_data.amount_paid
         assert expense_participant.amount_owed == 50

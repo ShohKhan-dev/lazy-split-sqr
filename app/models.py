@@ -64,3 +64,13 @@ class ExpenseParticipant(Base):
     amount_paid = Column(Float)
     amount_owed = Column(Float)
     expense = relationship("Expense", back_populates="expense_participants")
+
+class Dept(Base):
+    __tablename__ = "dept"
+
+    dept_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"))
+    lender_id = Column(Integer, ForeignKey("users.user_id"))
+    group_id = Column(Integer, ForeignKey("groups.group_id"))
+    amount = Column(Float)
+    created_at = Column(DateTime, default=datetime.now)

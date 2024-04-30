@@ -91,7 +91,7 @@ def get_user_expenses(user_id: int, db: Session = Depends(get_db)):
     for expense_participant in expense_participants:
         expense = (
             db.query(Expense)
-            .filter(Expense.expense_id == expense_participant.expense_id)
+            .filter(Expense.expense_id == expense_participant.group_id)
             .first()
         )
         expense_details = {
