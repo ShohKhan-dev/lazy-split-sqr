@@ -30,7 +30,14 @@ from app.api.dept import (
     update_dept_amount,
     DeptPaid,
 )
-from app.models import Dept, User, Group, GroupMembership, Expense, ExpenseParticipant
+from app.models import (
+    Dept,
+    User,
+    Group,
+    GroupMembership,
+    Expense,
+    ExpenseParticipant,
+)
 from unittest.mock import MagicMock
 import pytest
 
@@ -152,7 +159,9 @@ class TestUserAPI:
 
         assert len(expenses_with_details) == 1
         assert expenses_with_details[0]["participant_info"] == "info"
-        assert expenses_with_details[0]["expense_description"] == "Test expense"
+        assert (
+            expenses_with_details[0]["expense_description"] == "Test expense"
+        )
         assert expenses_with_details[0]["expense_amount"] == 100
 
 
@@ -312,7 +321,11 @@ class TestExpenseAPI:
         )
         mock_db.query().filter().first.side_effect = [expense, group]
 
-        expense_create_data = {"expense_id": 1, "user_id": 1, "amount_paid": 100}
+        expense_create_data = {
+            "expense_id": 1,
+            "user_id": 1,
+            "amount_paid": 100,
+        }
         data = create_expense_participant(
             CreateExpenseParticipant(**expense_create_data), db=mock_db
         )
@@ -396,9 +409,13 @@ class TestDeptAPI:
 
         update = DeptPaid(amount=50)
 
-        mock_db.query.return_value.filter.return_value.first.return_value = dept
+        mock_db.query.return_value.filter.return_value.first.return_value = (
+            dept
+        )
 
         response = update_dept_amount(dept_id=1, dept_paid=update, db=mock_db)
 
         assert dept.amount == 50
-        assert response == {"message": "Dept updated successfully, amount left: 50"}
+        assert response == {
+            "message": "Dept updated successfully, amount left: 50"
+        }

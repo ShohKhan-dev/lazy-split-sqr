@@ -8,7 +8,9 @@ from front.main import (
 from mocks import *
 
 
-def test_add_member_success(requests_mock, st_success_mock, get_user_by_username_mock):
+def test_add_member_success(
+    requests_mock, st_success_mock, get_user_by_username_mock
+):
     username = "existing_user"
     get_user_by_username_mock.return_value = {"user_id": 123}
 
@@ -43,10 +45,14 @@ def test_add_member_error_response(
     requests_mock.post.return_value.json.return_value = {}
 
     add_member(1, username)
-    st_error_mock.assert_called_once_with(f"Couldn't add {username} to the group")
+    st_error_mock.assert_called_once_with(
+        f"Couldn't add {username} to the group"
+    )
 
 
-def test_create_expense_success(requests_mock, st_success_mock, st_session_state_mock):
+def test_create_expense_success(
+    requests_mock, st_success_mock, st_session_state_mock
+):
     group_id = 1
     created_by = 1
     username = "test_user"
@@ -106,7 +112,8 @@ def test_create_group_success(requests_mock):
 
     # Check if requests.post is called with the correct endpoint and JSON data
     requests_mock.post.assert_called_once_with(
-        f"{BASE_URL}/groups/", json={"group_name": group_name, "created_by": created_by}
+        f"{BASE_URL}/groups/",
+        json={"group_name": group_name, "created_by": created_by},
     )
 
     # Check if the result matches the expected response

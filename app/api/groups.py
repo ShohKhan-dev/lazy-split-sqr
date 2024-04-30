@@ -22,7 +22,9 @@ def get_groups(db: Session = Depends(get_db)):
 def get_group(group_id: int, db: Session = Depends(get_db)):
     group = (
         db.query(Group)
-        .options(joinedload(Group.groupmembers), joinedload(Group.groupexpenses))
+        .options(
+            joinedload(Group.groupmembers), joinedload(Group.groupexpenses)
+        )
         .filter(Group.group_id == group_id)
         .first()
     )
@@ -52,7 +54,9 @@ def create_group(group: GroupCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/{group_id}/add_member/{user_id}")
-def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db)):
+def add_group_member(
+    group_id: int, user_id: int, db: Session = Depends(get_db)
+):
     if db.query(User).filter(User.user_id == user_id).first() is None:
         raise HTTPException(status_code=404, detail="User not found")
 
@@ -64,7 +68,8 @@ def add_group_member(group_id: int, user_id: int, db: Session = Depends(get_db))
         db.query(GroupMembership)
         .filter(
             and_(
-                GroupMembership.group_id == group_id, GroupMembership.user_id == user_id
+                GroupMembership.group_id == group_id,
+                GroupMembership.user_id == user_id,
             )
         )
         .first()

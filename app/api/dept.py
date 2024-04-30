@@ -1,6 +1,13 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
-from app.models import Dept, ExpenseParticipant, Expense, Group, User, GroupMembership
+from app.models import (
+    Dept,
+    ExpenseParticipant,
+    Expense,
+    Group,
+    User,
+    GroupMembership,
+)
 from app.database import get_db
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
@@ -30,7 +37,9 @@ def list_group_depts(group_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{group_id}/{user_id}")
-def list_user_depts(group_id: int, user_id: int, db: Session = Depends(get_db)):
+def list_user_depts(
+    group_id: int, user_id: int, db: Session = Depends(get_db)
+):
     depts = (
         db.query(Dept)
         .filter(

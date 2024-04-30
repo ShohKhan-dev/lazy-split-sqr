@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Boolean,
+    Float,
+)
 from app.database import Base
 from datetime import datetime
 from sqlalchemy.orm import relationship
@@ -52,7 +60,9 @@ class Expense(Base):
     created_by = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.now)
     group = relationship("Group", back_populates="groupexpenses")
-    expense_participants = relationship("ExpenseParticipant", back_populates="expense")
+    expense_participants = relationship(
+        "ExpenseParticipant", back_populates="expense"
+    )
 
 
 class ExpenseParticipant(Base):

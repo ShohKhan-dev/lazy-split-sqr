@@ -1,7 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session, joinedload
-from app.models import Dept, Group, Expense, ExpenseParticipant, GroupMembership
+from app.models import (
+    Dept,
+    Group,
+    Expense,
+    ExpenseParticipant,
+    GroupMembership,
+)
 from app.database import get_db
 from pydantic import BaseModel
 
@@ -153,7 +159,9 @@ def create_expense(expense: ExpenseCreate, db: Session = Depends(get_db)):
 # Delete an expense
 @router.delete("/{expense_id}")
 def delete_expense(expense_id: int, db: Session = Depends(get_db)):
-    expense = db.query(Expense).filter(Expense.expense_id == expense_id).first()
+    expense = (
+        db.query(Expense).filter(Expense.expense_id == expense_id).first()
+    )
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
 
@@ -179,7 +187,8 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
         .filter(
             Dept.group_id == expense.group_id,
             or_(
-                Dept.lender_id == expense.created_by, Dept.user_id == expense.created_by
+                Dept.lender_id == expense.created_by,
+                Dept.user_id == expense.created_by,
             ),
         )
         .all()
@@ -233,7 +242,9 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
 def create_expense_participant(
     p: CreateExpenseParticipant, db: Session = Depends(get_db)
 ):
-    expense = db.query(Expense).filter(Expense.expense_id == p.expense_id).first()
+    expense = (
+        db.query(Expense).filter(Expense.expense_id == p.expense_id).first()
+    )
     if expense is None:
         raise HTTPException(status_code=404, detail="Expense not found")
 
