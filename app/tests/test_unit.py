@@ -338,7 +338,9 @@ class TestDeptAPI:
             amount=100,
         )
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [dept_instance]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            dept_instance
+        ]
         data = list_group_depts(group_id=1, db=mock_db)
 
         assert isinstance(data[0], Dept)
@@ -357,7 +359,9 @@ class TestDeptAPI:
             amount=100,
         )
 
-        mock_db.query.return_value.filter.return_value.all.return_value = [dept_instance]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            dept_instance
+        ]
 
         result = list_user_depts(group_id=1, user_id=1, db=mock_db)
 

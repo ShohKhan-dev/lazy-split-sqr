@@ -216,7 +216,7 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
 
     expense_participants = (
         db.query(ExpenseParticipant)
-        .filter(ExpenseParticipant.expense_id == expense.group_id)
+        .filter(ExpenseParticipant.expense_id == expense.expense_id)
         .all()
     )
 
